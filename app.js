@@ -16,14 +16,6 @@ const DICE = [
   "EIOSST", "ELRTTY", "HIMNQU", "HLNNRZ",
 ];
 
-const SCORE_TABLE = (len) => {
-  if (len <= 4) return 1;
-  if (len === 5) return 2;
-  if (len === 6) return 3;
-  if (len === 7) return 5;
-  return 11;
-};
-
 // Standard Scrabble letter point values. The combined "Qu" tile is fixed at 11 (Q=10 + U=1).
 const LETTER_POINTS = {
   A: 1, B: 3, C: 3, D: 2, E: 1, F: 4, G: 2, H: 4, I: 1, J: 8, K: 5, L: 1, M: 3, N: 1, O: 1,
@@ -33,6 +25,13 @@ const LETTER_POINTS = {
 function tilePoints(tile) {
   if (tile.value === "QU") return 11;
   return LETTER_POINTS[tile.value] || 0;
+}
+
+// Word score = sum of tile points + length bonus (0 for 3-letter words, N-3 for longer words).
+function wordScore(selectedPath, word) {
+  const tileSum = selectedPath.reduce((sum, idx) => sum + tilePoints(board[idx]), 0);
+  const bonus = Math.max(0, word.length - 3);
+  return tileSum + bonus;
 }
 
 // ---- DOM refs ----
@@ -226,7 +225,7 @@ function submitWord(selectedPath) {
   if (foundWords.has(word)) return;
   if (!wordSet.has(word)) return;
   foundWords.add(word);
-  score += SCORE_TABLE(word.length);
+  score += wordScore(selectedPath, word);
   updateHUD();
   const li = document.createElement("li");
   li.textContent = word;
@@ -289,6 +288,7 @@ function startGame() {
   gameoverOverlay.classList.add("hidden");
   startBtn.classList.add("hidden");
   document.getElementById("duration-select").classList.add("hidden");
+  document.getElementById("scoring-info").classList.add("hidden");
   timerId = setInterval(() => {
     timeLeft -= 1;
     updateHUD();
@@ -314,6 +314,7 @@ function endGame() {
   gameoverOverlay.classList.remove("hidden");
   startBtn.classList.remove("hidden");
   document.getElementById("duration-select").classList.remove("hidden");
+  document.getElementById("scoring-info").classList.remove("hidden");
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
   if (score > best) {
