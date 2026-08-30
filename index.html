@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1b1f2a">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<title>Word Scramble</title>
+</head>
+<body>
+  <div id="app">
+    <header id="hud">
+      <div class="hud-item">
+        <span class="hud-label">SCORE</span>
+        <span id="score" class="hud-value">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">TIME</span>
+        <span id="timer" class="hud-value">3:00</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">BEST</span>
+        <span id="best" class="hud-value">0</span>
+      </div>
+    </header>
+
+    <div id="current-word" aria-live="polite"></div>
+
+    <main id="board" aria-label="文字盤"></main>
+
+    <section id="found-panel">
+      <h2>見つけた単語 (<span id="found-count">0</span>)</h2>
+      <ul id="found-list"></ul>
+    </section>
+
+    <button id="start-btn" type="button">スタート</button>
+  </div>
+
+  <div id="loading-overlay" class="overlay">
+    <p id="loading-text">辞書を読み込み中...</p>
+  </div>
+
+  <div id="gameover-overlay" class="overlay hidden">
+    <div class="modal">
+      <h2>ゲーム終了！</h2>
+      <p>あなたのスコア: <strong id="final-score">0</strong></p>
+      <p>見つけた単語: <strong id="final-found-count">0</strong> / <span id="total-word-count">?</span></p>
+      <p id="solving-text" class="hidden">盤面を解析中...</p>
+      <div id="missed-words" class="hidden">
+        <h3>見逃した単語</h3>
+        <ul id="missed-list"></ul>
+      </div>
+      <button id="restart-btn" type="button">もう一度プレイ</button>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
