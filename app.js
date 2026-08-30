@@ -142,13 +142,48 @@ function renderBoard() {
 
 // ---- Selection interaction ----
 // Map a touch/mouse point to a cell by grid position (not DOM hit-test), so the
-// gaps between tiles never cause a diagonal swipe to miss a cell.
+// gaps between tiles never cause a diagonal swipe to miss a cell. Used only for
+// the initial tap; subsequent moves use directional matching (see below).
 function cellElAt(x, y) {
   const rect = boardEl.getBoundingClientRect();
   if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return null;
   const col = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor(((x - rect.left) / rect.width) * GRID_SIZE)));
   const row = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor(((y - rect.top) / rect.height) * GRID_SIZE)));
   return boardEl.querySelector(`.cell[data-idx="${row * GRID_SIZE + col}"]`);
+}
+
+function cellCenter(idx) {
+  const rect = boardEl.getBoundingClientRect();
+  const cellW = rect.width / GRID_SIZE;
+  const cellH = rect.height / GRID_SIZE;
+  const row = Math.floor(idx / GRID_SIZE);
+  const col = idx % GRID_SIZE;
+  return { x: rect.left + cellW * (col + 0.5), y: rect.top + cellH * (row + 0.5), cellW, cellH };
+}
+
+// Pick whichever neighbor of `fromIdx` best matches the drag direction toward (x, y),
+// rather than requiring the finger to visually enter that tile's box. This is what
+// makes diagonal swipes register from intent/angle instead of exact hit-testing.
+function directionalNeighbor(fromIdx, x, y) {
+  const from = cellCenter(fromIdx);
+  const dx = x - from.x;
+  const dy = y - from.y;
+  const dist = Math.hypot(dx, dy);
+  const deadZone = Math.min(from.cellW, from.cellH) * 0.5;
+  if (dist < deadZone) return null; // finger hasn't committed to a direction yet
+  let best = null;
+  let bestScore = -Infinity;
+  for (const idx of neighbors[fromIdx]) {
+    const to = cellCenter(idx);
+    const ndx = to.x - from.x;
+    const ndy = to.y - from.y;
+    const score = (dx * ndx + dy * ndy) / (dist * Math.hypot(ndx, ndy)); // cosine similarity
+    if (score > bestScore) {
+      bestScore = score;
+      best = idx;
+    }
+  }
+  return bestScore > 0.5 ? best : null; // within ~60 degrees of the neighbor's direction
 }
 
 function updateSelectionUI() {
@@ -187,9 +222,9 @@ function tryExtendTo(idx) {
   updateSelectionUI();
 }
 
-// Fast swipes can skip touchmove samples past more than one cell (diagonals span a
-// longer distance between centers), so walk the segment in small steps instead of
-// only checking the final point.
+// Fast swipes can skip touchmove samples past more than one cell, so walk the
+// segment in small steps, picking each step's cell by drag direction rather than
+// by exact hit-testing.
 function moveSelect(x, y) {
   if (!selecting) return;
   const dx = x - lastMoveX;
@@ -200,8 +235,8 @@ function moveSelect(x, y) {
   for (let i = 1; i <= steps; i++) {
     const px = lastMoveX + (dx * i) / steps;
     const py = lastMoveY + (dy * i) / steps;
-    const cellEl = cellElAt(px, py);
-    if (cellEl) tryExtendTo(Number(cellEl.dataset.idx));
+    const idx = directionalNeighbor(path[path.length - 1], px, py);
+    if (idx !== null) tryExtendTo(idx);
   }
   lastMoveX = x;
   lastMoveY = y;
