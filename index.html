@@ -37,6 +37,12 @@
       <ul id="found-list"></ul>
     </section>
 
+    <div id="duration-select" role="radiogroup" aria-label="制限時間">
+      <label><input type="radio" name="duration" value="60" checked><span>1分</span></label>
+      <label><input type="radio" name="duration" value="120"><span>2分</span></label>
+      <label><input type="radio" name="duration" value="180"><span>3分</span></label>
+    </div>
+
     <button id="start-btn" type="button">スタート</button>
   </div>
 
@@ -47,12 +53,16 @@
   <div id="gameover-overlay" class="overlay hidden">
     <div class="modal">
       <h2>ゲーム終了！</h2>
-      <p>あなたのスコア: <strong id="final-score">0</strong></p>
       <p>見つけた単語: <strong id="final-found-count">0</strong> / <span id="total-word-count">?</span></p>
+      <ul id="length-breakdown"></ul>
       <p id="solving-text" class="hidden">盤面を解析中...</p>
       <div id="missed-words" class="hidden">
-        <h3>見逃した単語</h3>
+        <h3>見逃した単語(文字数別)</h3>
         <ul id="missed-list"></ul>
+      </div>
+      <div id="final-score-display">
+        <span class="final-score-label">SCORE</span>
+        <span id="final-score">0</span>
       </div>
       <button id="restart-btn" type="button">もう一度プレイ</button>
     </div>

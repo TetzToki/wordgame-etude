@@ -76,6 +76,7 @@ html, body {
 }
 
 .cell {
+  position: relative;
   background: var(--tile);
   border-radius: 12px;
   display: flex;
@@ -85,6 +86,19 @@ html, body {
   font-weight: 700;
   text-transform: uppercase;
   transition: background-color 0.1s, transform 0.1s;
+}
+
+.cell .points {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  font-size: clamp(9px, 2.6vw, 12px);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.cell.selected .points {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .cell.selected {
@@ -133,6 +147,39 @@ html, body {
   cursor: pointer;
 }
 
+#duration-select {
+  display: flex;
+  gap: 8px;
+}
+
+#duration-select label {
+  flex: 1;
+  position: relative;
+}
+
+#duration-select input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+#duration-select span {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+#duration-select input:checked + span {
+  background: var(--accent);
+  color: #fff;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -158,6 +205,42 @@ html, body {
 }
 
 .modal h2 { margin-top: 0; }
+
+#length-breakdown {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+#length-breakdown li {
+  background: var(--tile);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+#final-score-display {
+  margin: 20px 0;
+}
+
+.final-score-label {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+#final-score {
+  display: block;
+  font-size: 56px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.2;
+}
 
 #missed-list {
   list-style: none;

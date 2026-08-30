@@ -2,7 +2,7 @@
 
 // ---- Config ----
 const GRID_SIZE = 4;
-const GAME_DURATION = 180; // seconds (classic Boggle)
+const DEFAULT_DURATION = 60; // seconds, default 1 minute
 const MIN_WORD_LEN = 3;
 const WORDLIST_URL = "https://cdn.jsdelivr.net/gh/dolph/dictionary@master/enable1.txt";
 const BEST_SCORE_KEY = "wordscramble.bestScore";
@@ -24,6 +24,17 @@ const SCORE_TABLE = (len) => {
   return 11;
 };
 
+// Standard Scrabble letter point values. The combined "Qu" tile is fixed at 11 (Q=10 + U=1).
+const LETTER_POINTS = {
+  A: 1, B: 3, C: 3, D: 2, E: 1, F: 4, G: 2, H: 4, I: 1, J: 8, K: 5, L: 1, M: 3, N: 1, O: 1,
+  P: 3, Q: 10, R: 1, S: 1, T: 1, U: 1, V: 4, W: 4, X: 8, Y: 4, Z: 10,
+};
+
+function tilePoints(tile) {
+  if (tile.value === "QU") return 11;
+  return LETTER_POINTS[tile.value] || 0;
+}
+
 // ---- DOM refs ----
 const boardEl = document.getElementById("board");
 const scoreEl = document.getElementById("score");
@@ -43,6 +54,7 @@ const totalWordCountEl = document.getElementById("total-word-count");
 const solvingTextEl = document.getElementById("solving-text");
 const missedWordsEl = document.getElementById("missed-words");
 const missedListEl = document.getElementById("missed-list");
+const lengthBreakdownEl = document.getElementById("length-breakdown");
 
 // ---- State ----
 let wordSet = null; // Set<string> uppercase, dictionary
@@ -51,7 +63,8 @@ let board = []; // array of { display, value } length 16
 let neighbors = []; // adjacency list per index (8-direction)
 let foundWords = new Set();
 let score = 0;
-let timeLeft = GAME_DURATION;
+let gameDuration = DEFAULT_DURATION;
+let timeLeft = DEFAULT_DURATION;
 let timerId = null;
 let selecting = false;
 let path = [];
@@ -121,7 +134,7 @@ function renderBoard() {
     const cell = document.createElement("div");
     cell.className = "cell";
     cell.dataset.idx = String(idx);
-    cell.textContent = tile.display;
+    cell.innerHTML = `<span class="letter">${tile.display}</span><span class="points">${tilePoints(tile)}</span>`;
     boardEl.appendChild(cell);
   });
 }
@@ -233,13 +246,34 @@ function updateHUD() {
   timerEl.textContent = formatTime(timeLeft);
 }
 
+// ---- Result breakdown ----
+function renderLengthCounts(targetEl, words) {
+  const counts = {};
+  words.forEach((w) => {
+    const key = w.length >= 8 ? "8+" : String(w.length);
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  targetEl.innerHTML = "";
+  ["3", "4", "5", "6", "7", "8+"].forEach((key) => {
+    const li = document.createElement("li");
+    li.textContent = `${key}文字: ${counts[key] || 0}個`;
+    targetEl.appendChild(li);
+  });
+}
+
 // ---- Game flow ----
+function getSelectedDuration() {
+  const checked = document.querySelector('input[name="duration"]:checked');
+  return checked ? Number(checked.value) : DEFAULT_DURATION;
+}
+
 function resetGameState() {
   board = generateBoard();
   neighbors = computeNeighbors();
   foundWords = new Set();
   score = 0;
-  timeLeft = GAME_DURATION;
+  gameDuration = getSelectedDuration();
+  timeLeft = gameDuration;
   path = [];
   selecting = false;
   foundListEl.innerHTML = "";
@@ -254,6 +288,7 @@ function startGame() {
   gameActive = true;
   gameoverOverlay.classList.add("hidden");
   startBtn.classList.add("hidden");
+  document.getElementById("duration-select").classList.add("hidden");
   timerId = setInterval(() => {
     timeLeft -= 1;
     updateHUD();
@@ -272,11 +307,13 @@ function endGame() {
   finalScoreEl.textContent = String(score);
   finalFoundCountEl.textContent = String(foundWords.size);
   totalWordCountEl.textContent = "?";
+  renderLengthCounts(lengthBreakdownEl, foundWords);
   solvingTextEl.classList.remove("hidden");
   missedWordsEl.classList.add("hidden");
   missedListEl.innerHTML = "";
   gameoverOverlay.classList.remove("hidden");
   startBtn.classList.remove("hidden");
+  document.getElementById("duration-select").classList.remove("hidden");
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
   if (score > best) {
@@ -288,12 +325,8 @@ function endGame() {
   setTimeout(() => {
     const allWords = solveBoard();
     totalWordCountEl.textContent = String(allWords.size);
-    const missed = [...allWords].filter((w) => !foundWords.has(w)).sort();
-    missed.forEach((w) => {
-      const li = document.createElement("li");
-      li.textContent = w;
-      missedListEl.appendChild(li);
-    });
+    const missed = [...allWords].filter((w) => !foundWords.has(w));
+    renderLengthCounts(missedListEl, missed);
     solvingTextEl.classList.add("hidden");
     missedWordsEl.classList.remove("hidden");
   }, 50);
@@ -329,6 +362,12 @@ async function init() {
   attachInputHandlers();
   startBtn.addEventListener("click", startGame);
   restartBtn.addEventListener("click", startGame);
+  document.querySelectorAll('input[name="duration"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (!gameActive) timerEl.textContent = formatTime(getSelectedDuration());
+    });
+  });
+  timerEl.textContent = formatTime(getSelectedDuration());
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
   bestEl.textContent = String(best);
