@@ -68,6 +68,8 @@ let timerId = null;
 let selecting = false;
 let path = [];
 let gameActive = false;
+let lastMoveX = 0;
+let lastMoveY = 0;
 
 // ---- Neighbor computation (8-direction) ----
 function computeNeighbors() {
@@ -165,14 +167,13 @@ function startSelect(x, y) {
   if (!cellEl) return;
   selecting = true;
   path = [Number(cellEl.dataset.idx)];
+  lastMoveX = x;
+  lastMoveY = y;
   updateSelectionUI();
 }
 
-function moveSelect(x, y) {
-  if (!selecting) return;
-  const cellEl = cellElAt(x, y);
-  if (!cellEl) return;
-  const idx = Number(cellEl.dataset.idx);
+// Extend/backtrack the path to a single target cell index.
+function tryExtendTo(idx) {
   const last = path[path.length - 1];
   if (idx === last) return;
   if (path.length > 1 && idx === path[path.length - 2]) {
@@ -184,6 +185,26 @@ function moveSelect(x, y) {
   if (!neighbors[last].includes(idx)) return;
   path.push(idx);
   updateSelectionUI();
+}
+
+// Fast swipes can skip touchmove samples past more than one cell (diagonals span a
+// longer distance between centers), so walk the segment in small steps instead of
+// only checking the final point.
+function moveSelect(x, y) {
+  if (!selecting) return;
+  const dx = x - lastMoveX;
+  const dy = y - lastMoveY;
+  const dist = Math.hypot(dx, dy);
+  const step = 10; // px
+  const steps = Math.max(1, Math.ceil(dist / step));
+  for (let i = 1; i <= steps; i++) {
+    const px = lastMoveX + (dx * i) / steps;
+    const py = lastMoveY + (dy * i) / steps;
+    const cellEl = cellElAt(px, py);
+    if (cellEl) tryExtendTo(Number(cellEl.dataset.idx));
+  }
+  lastMoveX = x;
+  lastMoveY = y;
 }
 
 function endSelect() {
