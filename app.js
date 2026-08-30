@@ -139,9 +139,14 @@ function renderBoard() {
 }
 
 // ---- Selection interaction ----
+// Map a touch/mouse point to a cell by grid position (not DOM hit-test), so the
+// gaps between tiles never cause a diagonal swipe to miss a cell.
 function cellElAt(x, y) {
-  const el = document.elementFromPoint(x, y);
-  return el ? el.closest(".cell") : null;
+  const rect = boardEl.getBoundingClientRect();
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return null;
+  const col = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor(((x - rect.left) / rect.width) * GRID_SIZE)));
+  const row = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor(((y - rect.top) / rect.height) * GRID_SIZE)));
+  return boardEl.querySelector(`.cell[data-idx="${row * GRID_SIZE + col}"]`);
 }
 
 function updateSelectionUI() {
@@ -285,6 +290,7 @@ function resetGameState() {
 function startGame() {
   resetGameState();
   gameActive = true;
+  document.body.classList.add("playing");
   gameoverOverlay.classList.add("hidden");
   startBtn.classList.add("hidden");
   document.getElementById("duration-select").classList.add("hidden");
@@ -298,6 +304,7 @@ function startGame() {
 
 function endGame() {
   gameActive = false;
+  document.body.classList.remove("playing");
   clearInterval(timerId);
   timerId = null;
   path = [];
