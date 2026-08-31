@@ -59,7 +59,12 @@ const missedListEl = document.getElementById("missed-list");
 const lengthBreakdownEl = document.getElementById("length-breakdown");
 const playerNameInput = document.getElementById("player-name");
 const retireBtn = document.getElementById("retire-btn");
-const highScoreListEl = document.getElementById("high-score-list");
+const highScoreList60El = document.getElementById("high-score-list-60");
+const highScoreList120El = document.getElementById("high-score-list-120");
+const highScoreList180El = document.getElementById("high-score-list-180");
+const highScoreLabel60El = document.getElementById("high-score-label-60");
+const highScoreLabel120El = document.getElementById("high-score-label-120");
+const highScoreLabel180El = document.getElementById("high-score-label-180");
 const hudLabelScoreEl = document.getElementById("hud-label-score");
 const hudLabelTimeEl = document.getElementById("hud-label-time");
 const hudLabelBestEl = document.getElementById("hud-label-best");
@@ -146,7 +151,7 @@ const I18N = {
 
 let currentLang = localStorage.getItem(LANG_KEY) || "ja";
 let lastMissedWords = [];
-let lastHighScores = [];
+let lastHighScores = {};
 
 function applyLanguage() {
   const t = I18N[currentLang];
@@ -172,6 +177,9 @@ function applyLanguage() {
   highScoreHeadingEl.textContent = t.highScoreHeading;
   finalScoreLabelTextEl.textContent = t.finalScoreLabel;
   restartBtn.textContent = t.restartBtn;
+  highScoreLabel60El.textContent = t.duration60;
+  highScoreLabel120El.textContent = t.duration120;
+  highScoreLabel180El.textContent = t.duration180;
   howToPlayHeadingEl.textContent = t.howToPlayHeading;
   howToPlayListEl.innerHTML = "";
   t.howToPlaySteps.forEach((step) => {
@@ -455,39 +463,51 @@ function renderLengthCounts(targetEl, words) {
 }
 
 // ---- High scores ----
-function getHighScores() {
+function getAllHighScores() {
   try {
-    const raw = JSON.parse(localStorage.getItem(HIGH_SCORE_KEY) || "[]");
-    if (Array.isArray(raw)) return raw;
+    const raw = JSON.parse(localStorage.getItem(HIGH_SCORE_KEY) || "{}");
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw;
   } catch (_err) {
     // ignore malformed storage
   }
-  return [];
+  return {};
 }
 
-function addHighScore(name, scoreValue) {
-  const list = getHighScores();
+function getHighScores(duration) {
+  const all = getAllHighScores();
+  return Array.isArray(all[duration]) ? all[duration] : [];
+}
+
+function addHighScore(name, scoreValue, duration) {
+  const all = getAllHighScores();
+  const list = Array.isArray(all[duration]) ? all[duration] : [];
   list.push({ name, score: scoreValue });
   list.sort((a, b) => b.score - a.score);
-  const trimmed = list.slice(0, MAX_HIGH_SCORES);
-  localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(trimmed));
-  return trimmed;
+  all[duration] = list.slice(0, MAX_HIGH_SCORES);
+  localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(all));
+  return all;
 }
 
-function renderHighScores(list) {
+function renderHighScoreList(targetEl, list) {
   const t = I18N[currentLang];
-  highScoreListEl.innerHTML = "";
+  targetEl.innerHTML = "";
   if (list.length === 0) {
     const li = document.createElement("li");
     li.textContent = t.highScoreEmpty;
-    highScoreListEl.appendChild(li);
+    targetEl.appendChild(li);
     return;
   }
   list.forEach((entry) => {
     const li = document.createElement("li");
     li.innerHTML = `<span>${entry.name}</span><span>${t.scorePts(entry.score)}</span>`;
-    highScoreListEl.appendChild(li);
+    targetEl.appendChild(li);
   });
+}
+
+function renderHighScores(all) {
+  renderHighScoreList(highScoreList60El, all[60] || []);
+  renderHighScoreList(highScoreList120El, all[120] || []);
+  renderHighScoreList(highScoreList180El, all[180] || []);
 }
 
 function getPlayerName() {
@@ -566,7 +586,7 @@ function endGame() {
   document.getElementById("scoring-info").classList.remove("hidden");
   document.getElementById("player-name-select").classList.remove("hidden");
 
-  const scores = score > 0 ? addHighScore(getPlayerName(), score) : getHighScores();
+  const scores = score > 0 ? addHighScore(getPlayerName(), score, gameDuration) : getAllHighScores();
   lastHighScores = scores;
   renderHighScores(scores);
 

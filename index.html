@@ -66,7 +66,7 @@
 
     <button id="start-btn" type="button">スタート</button>
 
-    <p id="version-info">v1.3 (2026-08-31)</p>
+    <p id="version-info">v1.4 (2026-08-31)</p>
   </div>
 
   <div id="loading-overlay" class="overlay">
@@ -83,13 +83,24 @@
         <h3 id="missed-heading">見逃した単語(文字数別)</h3>
         <ul id="missed-list"></ul>
       </div>
-      <div id="high-score-panel">
-        <h3 id="high-score-heading">ハイスコア ランキング</h3>
-        <ol id="high-score-list"></ol>
-      </div>
       <div id="final-score-display">
         <span class="final-score-label" id="final-score-label-text">SCORE</span>
         <span id="final-score">0</span>
+      </div>
+      <div id="high-score-panel">
+        <h3 id="high-score-heading">ハイスコア ランキング</h3>
+        <div class="high-score-group">
+          <h4 id="high-score-label-60">1分</h4>
+          <ol id="high-score-list-60"></ol>
+        </div>
+        <div class="high-score-group">
+          <h4 id="high-score-label-120">2分</h4>
+          <ol id="high-score-list-120"></ol>
+        </div>
+        <div class="high-score-group">
+          <h4 id="high-score-label-180">3分</h4>
+          <ol id="high-score-list-180"></ol>
+        </div>
       </div>
       <button id="restart-btn" type="button">もう一度プレイ</button>
     </div>
