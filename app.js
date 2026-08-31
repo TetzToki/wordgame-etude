@@ -17,8 +17,8 @@ const MAX_HIGH_SCORES = 5;
 // This is an accepted trade-off for a casual, low-stakes leaderboard (no abuse protection).
 // Fill these in with your own JSONBin.io Bin ID / Master Key to enable sharing; leave blank
 // to keep high scores purely local (per-browser), which is the default fallback behavior.
-const LEADERBOARD_BIN_ID = "";
-const LEADERBOARD_API_KEY = "";
+const LEADERBOARD_BIN_ID = "6a957da5da38895dfe265228";
+const LEADERBOARD_API_KEY = "$2a$10$g4ewkrAVKyDzOtKx49ByterOVT1/4OSyUJ.CtIg2m.9vdim5yt0CO";
 const LEADERBOARD_URL = `https://api.jsonbin.io/v3/b/${LEADERBOARD_BIN_ID}`;
 
 function sharedLeaderboardEnabled() {
