@@ -57,8 +57,26 @@ html, body {
   font-weight: 700;
 }
 
-#score.high-score {
+.score-yellow {
+  color: #ffd700;
+}
+
+.score-orange {
   color: #ff9800;
+}
+
+.score-rainbow {
+  background: linear-gradient(90deg, #ff004c, #ff9800, #ffee00, #4cd137, #00c9ff, #a55eea, #ff004c);
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rainbow-shift 3s linear infinite;
+}
+
+@keyframes rainbow-shift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 400% 50%; }
 }
 
 #current-word {
@@ -358,6 +376,23 @@ body.playing #how-to-play {
   font-weight: 800;
   color: var(--accent);
   line-height: 1.2;
+}
+
+#final-score.score-yellow {
+  color: #ffd700;
+}
+
+#final-score.score-orange {
+  color: #ff9800;
+}
+
+#final-score.score-rainbow {
+  background: linear-gradient(90deg, #ff004c, #ff9800, #ffee00, #4cd137, #00c9ff, #a55eea, #ff004c);
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rainbow-shift 3s linear infinite;
 }
 
 #missed-list {

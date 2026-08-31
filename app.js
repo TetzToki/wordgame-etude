@@ -30,6 +30,21 @@ function tilePoints(tile) {
   return LETTER_POINTS[tile.value] || 0;
 }
 
+// Score color thresholds per game duration (seconds): yellow < orange < rainbow.
+const SCORE_COLOR_THRESHOLDS = {
+  60: { yellow: 80, orange: 90, rainbow: 100 },
+  120: { yellow: 100, orange: 150, rainbow: 200 },
+  180: { yellow: 200, orange: 250, rainbow: 300 },
+};
+
+function applyScoreColor(el, scoreValue, duration) {
+  const th = SCORE_COLOR_THRESHOLDS[duration] || SCORE_COLOR_THRESHOLDS[60];
+  el.classList.remove("score-yellow", "score-orange", "score-rainbow");
+  if (scoreValue >= th.rainbow) el.classList.add("score-rainbow");
+  else if (scoreValue >= th.orange) el.classList.add("score-orange");
+  else if (scoreValue >= th.yellow) el.classList.add("score-yellow");
+}
+
 // Word score = sum of tile points + length bonus (0 for 3-letter words, N-3 for longer words).
 function wordScore(selectedPath, word) {
   const tileSum = selectedPath.reduce((sum, idx) => sum + tilePoints(board[idx]), 0);
@@ -442,7 +457,7 @@ function formatTime(sec) {
 
 function updateHUD() {
   scoreEl.textContent = String(score);
-  scoreEl.classList.toggle("high-score", score > 100);
+  applyScoreColor(scoreEl, score, gameDuration);
   timerEl.textContent = formatTime(timeLeft);
 }
 
@@ -573,6 +588,7 @@ function endGame() {
   updateSelectionUI();
 
   finalScoreEl.textContent = String(score);
+  applyScoreColor(finalScoreEl, score, gameDuration);
   finalFoundCountEl.textContent = String(foundWords.size);
   totalWordCountEl.textContent = "?";
   renderLengthCounts(lengthBreakdownEl, foundWords);
