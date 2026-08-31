@@ -138,7 +138,7 @@ const I18N = {
     restartBtn: "もう一度プレイ",
     howToPlayHeading: "あそびかた",
     howToPlaySteps: [
-      "隣り合うマスをなぞって単語をつなげよう",
+      "隣り合うマス(斜め方向もOK)をなぞって単語をつなげよう",
       "3文字以上の単語が得点になる",
       "指を離すと単語が確定",
       "制限時間内にできるだけ多くの単語を見つけよう",
@@ -169,7 +169,7 @@ const I18N = {
     restartBtn: "Play Again",
     howToPlayHeading: "How to Play",
     howToPlaySteps: [
-      "Drag across adjacent letters to connect them into a word",
+      "Drag across adjacent letters (including diagonals) to connect them into a word",
       "Words of 3+ letters score points",
       "Release your finger to submit the word",
       "Find as many words as you can before time runs out",
