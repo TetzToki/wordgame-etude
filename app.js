@@ -8,6 +8,7 @@ const WORDLIST_URL = "https://cdn.jsdelivr.net/gh/dolph/dictionary@master/enable
 const BEST_SCORE_KEY = "wordscramble.bestScore";
 const HIGH_SCORE_KEY = "wordscramble.highScores";
 const PLAYER_NAME_KEY = "wordscramble.playerName";
+const PLAYER_ID_KEY = "wordscramble.playerId";
 const MAX_HIGH_SCORES = 5;
 
 // Classic "New Boggle" 16-cube letter distribution.
@@ -493,10 +494,17 @@ function getHighScores(duration) {
   return Array.isArray(all[duration]) ? all[duration] : [];
 }
 
-function addHighScore(name, scoreValue, duration) {
+function addHighScore(name, scoreValue, duration, playerId) {
   const all = getAllHighScores();
   const list = Array.isArray(all[duration]) ? all[duration] : [];
-  list.push({ name, score: scoreValue });
+  const existingIdx = list.findIndex((e) => e.id === playerId);
+  if (existingIdx >= 0) {
+    // Same browser/player: keep only their best score, but always refresh the displayed name.
+    if (scoreValue > list[existingIdx].score) list[existingIdx].score = scoreValue;
+    list[existingIdx].name = name;
+  } else {
+    list.push({ id: playerId, name, score: scoreValue });
+  }
   list.sort((a, b) => b.score - a.score);
   all[duration] = list.slice(0, MAX_HIGH_SCORES);
   localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(all));
@@ -528,6 +536,16 @@ function renderHighScores(all) {
 function getPlayerName() {
   const name = playerNameInput.value.trim();
   return name || "名無し";
+}
+
+// Persistent per-browser identity so repeat plays update one ranking entry instead of duplicating it.
+function getPlayerId() {
+  let id = localStorage.getItem(PLAYER_ID_KEY);
+  if (!id) {
+    id = (crypto.randomUUID && crypto.randomUUID()) || `p-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(PLAYER_ID_KEY, id);
+  }
+  return id;
 }
 
 // ---- Game flow ----
@@ -602,7 +620,7 @@ function endGame() {
   document.getElementById("scoring-info").classList.remove("hidden");
   document.getElementById("player-name-select").classList.remove("hidden");
 
-  const scores = score > 0 ? addHighScore(getPlayerName(), score, gameDuration) : getAllHighScores();
+  const scores = score > 0 ? addHighScore(getPlayerName(), score, gameDuration, getPlayerId()) : getAllHighScores();
   lastHighScores = scores;
   renderHighScores(scores);
 

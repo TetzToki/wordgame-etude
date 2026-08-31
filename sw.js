@@ -1,4 +1,4 @@
-const CACHE_NAME = "word-scramble-v10";
+const CACHE_NAME = "word-scramble-v11";
 const APP_SHELL = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
