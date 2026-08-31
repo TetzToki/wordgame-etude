@@ -6,6 +6,9 @@ const DEFAULT_DURATION = 60; // seconds, default 1 minute
 const MIN_WORD_LEN = 3;
 const WORDLIST_URL = "https://cdn.jsdelivr.net/gh/dolph/dictionary@master/enable1.txt";
 const BEST_SCORE_KEY = "wordscramble.bestScore";
+const HIGH_SCORE_KEY = "wordscramble.highScores";
+const PLAYER_NAME_KEY = "wordscramble.playerName";
+const MAX_HIGH_SCORES = 5;
 
 // Classic "New Boggle" 16-cube letter distribution.
 // 'Q' faces are treated as a combined "Qu" tile.
@@ -54,6 +57,9 @@ const solvingTextEl = document.getElementById("solving-text");
 const missedWordsEl = document.getElementById("missed-words");
 const missedListEl = document.getElementById("missed-list");
 const lengthBreakdownEl = document.getElementById("length-breakdown");
+const playerNameInput = document.getElementById("player-name");
+const retireBtn = document.getElementById("retire-btn");
+const highScoreListEl = document.getElementById("high-score-list");
 
 // ---- State ----
 let wordSet = null; // Set<string> uppercase, dictionary
@@ -70,6 +76,7 @@ let path = [];
 let gameActive = false;
 let lastMoveX = 0;
 let lastMoveY = 0;
+let timerStarted = false; // countdown begins on the first tile drag, not on the start button
 
 // ---- Neighbor computation (8-direction) ----
 function computeNeighbors() {
@@ -200,6 +207,7 @@ function startSelect(x, y) {
   if (!gameActive) return;
   const cellEl = cellElAt(x, y);
   if (!cellEl) return;
+  beginCountdown();
   selecting = true;
   path = [Number(cellEl.dataset.idx)];
   lastMoveX = x;
@@ -321,6 +329,46 @@ function renderLengthCounts(targetEl, words) {
   });
 }
 
+// ---- High scores ----
+function getHighScores() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(HIGH_SCORE_KEY) || "[]");
+    if (Array.isArray(raw)) return raw;
+  } catch (_err) {
+    // ignore malformed storage
+  }
+  return [];
+}
+
+function addHighScore(name, scoreValue) {
+  const list = getHighScores();
+  list.push({ name, score: scoreValue });
+  list.sort((a, b) => b.score - a.score);
+  const trimmed = list.slice(0, MAX_HIGH_SCORES);
+  localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(trimmed));
+  return trimmed;
+}
+
+function renderHighScores(list) {
+  highScoreListEl.innerHTML = "";
+  if (list.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "まだ記録がありません";
+    highScoreListEl.appendChild(li);
+    return;
+  }
+  list.forEach((entry) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${entry.name}</span><span>${entry.score}点</span>`;
+    highScoreListEl.appendChild(li);
+  });
+}
+
+function getPlayerName() {
+  const name = playerNameInput.value.trim();
+  return name || "名無し";
+}
+
 // ---- Game flow ----
 function getSelectedDuration() {
   const checked = document.querySelector('input[name="duration"]:checked');
@@ -336,6 +384,7 @@ function resetGameState() {
   timeLeft = gameDuration;
   path = [];
   selecting = false;
+  timerStarted = false;
   foundListEl.innerHTML = "";
   foundCountEl.textContent = "0";
   currentWordEl.textContent = "";
@@ -343,14 +392,10 @@ function resetGameState() {
   updateHUD();
 }
 
-function startGame() {
-  resetGameState();
-  gameActive = true;
-  document.body.classList.add("playing");
-  gameoverOverlay.classList.add("hidden");
-  startBtn.classList.add("hidden");
-  document.getElementById("duration-select").classList.add("hidden");
-  document.getElementById("scoring-info").classList.add("hidden");
+// The countdown only starts once the player drags the first tile, not on the start button.
+function beginCountdown() {
+  if (timerStarted) return;
+  timerStarted = true;
   timerId = setInterval(() => {
     timeLeft -= 1;
     updateHUD();
@@ -358,11 +403,25 @@ function startGame() {
   }, 1000);
 }
 
+function startGame() {
+  resetGameState();
+  gameActive = true;
+  localStorage.setItem(PLAYER_NAME_KEY, getPlayerName());
+  document.body.classList.add("playing");
+  gameoverOverlay.classList.add("hidden");
+  startBtn.classList.add("hidden");
+  retireBtn.classList.remove("hidden");
+  document.getElementById("duration-select").classList.add("hidden");
+  document.getElementById("scoring-info").classList.add("hidden");
+  document.getElementById("player-name-select").classList.add("hidden");
+}
+
 function endGame() {
   gameActive = false;
   document.body.classList.remove("playing");
   clearInterval(timerId);
   timerId = null;
+  timerStarted = false;
   path = [];
   selecting = false;
   updateSelectionUI();
@@ -376,8 +435,13 @@ function endGame() {
   missedListEl.innerHTML = "";
   gameoverOverlay.classList.remove("hidden");
   startBtn.classList.remove("hidden");
+  retireBtn.classList.add("hidden");
   document.getElementById("duration-select").classList.remove("hidden");
   document.getElementById("scoring-info").classList.remove("hidden");
+  document.getElementById("player-name-select").classList.remove("hidden");
+
+  const scores = score > 0 ? addHighScore(getPlayerName(), score) : getHighScores();
+  renderHighScores(scores);
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
   if (score > best) {
@@ -424,8 +488,12 @@ function solveBoard() {
 // ---- Init ----
 async function init() {
   attachInputHandlers();
+  playerNameInput.value = localStorage.getItem(PLAYER_NAME_KEY) || "";
   startBtn.addEventListener("click", startGame);
   restartBtn.addEventListener("click", startGame);
+  retireBtn.addEventListener("click", () => {
+    if (gameActive) endGame();
+  });
   document.querySelectorAll('input[name="duration"]').forEach((radio) => {
     radio.addEventListener("change", () => {
       if (!gameActive) timerEl.textContent = formatTime(getSelectedDuration());
