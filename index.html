@@ -12,18 +12,23 @@
 <title>Word Scramble</title>
 </head>
 <body>
+  <div id="lang-toggle" class="segmented-control" role="radiogroup" aria-label="Language">
+    <label><input type="radio" name="lang" value="ja" checked><span>JA</span></label>
+    <label><input type="radio" name="lang" value="en"><span>EN</span></label>
+  </div>
+
   <div id="app">
     <header id="hud">
       <div class="hud-item">
-        <span class="hud-label">SCORE</span>
+        <span class="hud-label" id="hud-label-score">SCORE</span>
         <span id="score" class="hud-value">0</span>
       </div>
       <div class="hud-item">
-        <span class="hud-label">TIME</span>
+        <span class="hud-label" id="hud-label-time">TIME</span>
         <span id="timer" class="hud-value">3:00</span>
       </div>
       <div class="hud-item">
-        <span class="hud-label">BEST</span>
+        <span class="hud-label" id="hud-label-best">BEST</span>
         <span id="best" class="hud-value">0</span>
       </div>
     </header>
@@ -35,26 +40,26 @@
     <button id="retire-btn" type="button" class="hidden">リタイヤ</button>
 
     <section id="found-panel">
-      <h2>見つけた単語 (<span id="found-count">0</span>)</h2>
+      <h2><span id="found-heading-text">見つけた単語</span> (<span id="found-count">0</span>)</h2>
       <ul id="found-list"></ul>
     </section>
 
     <div id="player-name-select">
-      <label for="player-name">プレイヤー名</label>
+      <label for="player-name" id="player-name-label">プレイヤー名</label>
       <input type="text" id="player-name" maxlength="12" placeholder="名無し">
     </div>
 
-    <div id="duration-select" role="radiogroup" aria-label="制限時間">
-      <label><input type="radio" name="duration" value="60" checked><span>1分</span></label>
-      <label><input type="radio" name="duration" value="120"><span>2分</span></label>
-      <label><input type="radio" name="duration" value="180"><span>3分</span></label>
+    <div id="duration-select" class="segmented-control" role="radiogroup" aria-label="制限時間">
+      <label><input type="radio" name="duration" value="60" checked><span id="duration-label-60">1分</span></label>
+      <label><input type="radio" name="duration" value="120"><span id="duration-label-120">2分</span></label>
+      <label><input type="radio" name="duration" value="180"><span id="duration-label-180">3分</span></label>
     </div>
 
     <p id="scoring-info">得点 = タイル点数の合計 ＋ 文字数ボーナス（3文字:+0 / 4文字以上:+(文字数-3)）</p>
 
     <button id="start-btn" type="button">スタート</button>
 
-    <p id="version-info">v1.1 (2026-08-31)</p>
+    <p id="version-info">v1.2 (2026-08-31)</p>
   </div>
 
   <div id="loading-overlay" class="overlay">
@@ -63,20 +68,20 @@
 
   <div id="gameover-overlay" class="overlay hidden">
     <div class="modal">
-      <h2>ゲーム終了！</h2>
-      <p>見つけた単語: <strong id="final-found-count">0</strong> / <span id="total-word-count">?</span></p>
+      <h2 id="gameover-heading">ゲーム終了！</h2>
+      <p><span id="found-summary-prefix">見つけた単語:</span> <strong id="final-found-count">0</strong> / <span id="total-word-count">?</span></p>
       <ul id="length-breakdown"></ul>
       <p id="solving-text" class="hidden">盤面を解析中...</p>
       <div id="missed-words" class="hidden">
-        <h3>見逃した単語(文字数別)</h3>
+        <h3 id="missed-heading">見逃した単語(文字数別)</h3>
         <ul id="missed-list"></ul>
       </div>
       <div id="high-score-panel">
-        <h3>ハイスコア ランキング</h3>
+        <h3 id="high-score-heading">ハイスコア ランキング</h3>
         <ol id="high-score-list"></ol>
       </div>
       <div id="final-score-display">
-        <span class="final-score-label">SCORE</span>
+        <span class="final-score-label" id="final-score-label-text">SCORE</span>
         <span id="final-score">0</span>
       </div>
       <button id="restart-btn" type="button">もう一度プレイ</button>

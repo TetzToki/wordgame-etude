@@ -56,6 +56,10 @@ html, body {
   font-weight: 700;
 }
 
+#score.high-score {
+  color: #ff9800;
+}
+
 #current-word {
   min-height: 32px;
   text-align: center;
@@ -148,17 +152,17 @@ html, body {
   cursor: pointer;
 }
 
-#duration-select {
+.segmented-control {
   display: flex;
   gap: 8px;
 }
 
-#duration-select label {
+.segmented-control label {
   flex: 1;
   position: relative;
 }
 
-#duration-select input {
+.segmented-control input {
   position: absolute;
   opacity: 0;
   inset: 0;
@@ -166,7 +170,7 @@ html, body {
   cursor: pointer;
 }
 
-#duration-select span {
+.segmented-control span {
   display: block;
   text-align: center;
   padding: 10px;
@@ -176,9 +180,23 @@ html, body {
   font-weight: 700;
 }
 
-#duration-select input:checked + span {
+.segmented-control input:checked + span {
   background: var(--accent);
   color: #fff;
+}
+
+#lang-toggle {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 8px);
+  right: calc(env(safe-area-inset-right) + 8px);
+  z-index: 20;
+  gap: 4px;
+}
+
+#lang-toggle span {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 8px;
 }
 
 #scoring-info {

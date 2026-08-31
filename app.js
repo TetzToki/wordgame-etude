@@ -60,6 +60,106 @@ const lengthBreakdownEl = document.getElementById("length-breakdown");
 const playerNameInput = document.getElementById("player-name");
 const retireBtn = document.getElementById("retire-btn");
 const highScoreListEl = document.getElementById("high-score-list");
+const hudLabelScoreEl = document.getElementById("hud-label-score");
+const hudLabelTimeEl = document.getElementById("hud-label-time");
+const hudLabelBestEl = document.getElementById("hud-label-best");
+const foundHeadingTextEl = document.getElementById("found-heading-text");
+const playerNameLabelEl = document.getElementById("player-name-label");
+const durationLabel60El = document.getElementById("duration-label-60");
+const durationLabel120El = document.getElementById("duration-label-120");
+const durationLabel180El = document.getElementById("duration-label-180");
+const scoringInfoEl = document.getElementById("scoring-info");
+const gameoverHeadingEl = document.getElementById("gameover-heading");
+const foundSummaryPrefixEl = document.getElementById("found-summary-prefix");
+const missedHeadingEl = document.getElementById("missed-heading");
+const highScoreHeadingEl = document.getElementById("high-score-heading");
+const finalScoreLabelTextEl = document.getElementById("final-score-label-text");
+
+// ---- i18n ----
+const LANG_KEY = "wordscramble.lang";
+const I18N = {
+  ja: {
+    hudScore: "SCORE", hudTime: "TIME", hudBest: "BEST",
+    boardAria: "文字盤",
+    foundHeading: "見つけた単語",
+    playerNameLabel: "プレイヤー名",
+    playerNamePlaceholder: "名無し",
+    durationAria: "制限時間",
+    duration60: "1分", duration120: "2分", duration180: "3分",
+    scoringInfo: "得点 = タイル点数の合計 ＋ 文字数ボーナス（3文字:+0 / 4文字以上:+(文字数-3)）",
+    startBtn: "スタート",
+    retireBtn: "リタイヤ",
+    loadingText: "辞書を読み込み中...",
+    loadingError: "辞書の読み込みに失敗しました。オンライン状態を確認してタップして再試行してください。",
+    gameoverHeading: "ゲーム終了！",
+    foundSummaryPrefix: "見つけた単語:",
+    missedHeading: "見逃した単語(文字数別)",
+    highScoreHeading: "ハイスコア ランキング",
+    highScoreEmpty: "まだ記録がありません",
+    finalScoreLabel: "SCORE",
+    restartBtn: "もう一度プレイ",
+    lengthUnit: (key) => (key === "8+" ? "8+文字" : `${key}文字`),
+    lengthCount: (n) => `${n}個`,
+    scorePts: (n) => `${n}点`,
+  },
+  en: {
+    hudScore: "SCORE", hudTime: "TIME", hudBest: "BEST",
+    boardAria: "Letter Board",
+    foundHeading: "Found Words",
+    playerNameLabel: "Player Name",
+    playerNamePlaceholder: "Anonymous",
+    durationAria: "Time Limit",
+    duration60: "1 min", duration120: "2 min", duration180: "3 min",
+    scoringInfo: "Score = sum of tile points + length bonus (3 letters: +0 / 4+ letters: +(length-3))",
+    startBtn: "Start",
+    retireBtn: "Give Up",
+    loadingText: "Loading dictionary...",
+    loadingError: "Failed to load the dictionary. Check your connection and tap to retry.",
+    gameoverHeading: "Game Over!",
+    foundSummaryPrefix: "Words found:",
+    missedHeading: "Missed words (by length)",
+    highScoreHeading: "High Score Ranking",
+    highScoreEmpty: "No records yet",
+    finalScoreLabel: "SCORE",
+    restartBtn: "Play Again",
+    lengthUnit: (key) => (key === "8+" ? "8+ letters" : `${key} letters`),
+    lengthCount: (n) => `${n}`,
+    scorePts: (n) => `${n} pts`,
+  },
+};
+
+let currentLang = localStorage.getItem(LANG_KEY) || "ja";
+let lastMissedWords = [];
+let lastHighScores = [];
+
+function applyLanguage() {
+  const t = I18N[currentLang];
+  document.documentElement.lang = currentLang;
+  hudLabelScoreEl.textContent = t.hudScore;
+  hudLabelTimeEl.textContent = t.hudTime;
+  hudLabelBestEl.textContent = t.hudBest;
+  boardEl.setAttribute("aria-label", t.boardAria);
+  foundHeadingTextEl.textContent = t.foundHeading;
+  playerNameLabelEl.textContent = t.playerNameLabel;
+  playerNameInput.placeholder = t.playerNamePlaceholder;
+  document.getElementById("duration-select").setAttribute("aria-label", t.durationAria);
+  durationLabel60El.textContent = t.duration60;
+  durationLabel120El.textContent = t.duration120;
+  durationLabel180El.textContent = t.duration180;
+  scoringInfoEl.textContent = t.scoringInfo;
+  startBtn.textContent = t.startBtn;
+  retireBtn.textContent = t.retireBtn;
+  loadingText.textContent = t.loadingText;
+  gameoverHeadingEl.textContent = t.gameoverHeading;
+  foundSummaryPrefixEl.textContent = t.foundSummaryPrefix;
+  missedHeadingEl.textContent = t.missedHeading;
+  highScoreHeadingEl.textContent = t.highScoreHeading;
+  finalScoreLabelTextEl.textContent = t.finalScoreLabel;
+  restartBtn.textContent = t.restartBtn;
+  renderLengthCounts(lengthBreakdownEl, foundWords);
+  renderLengthCounts(missedListEl, lastMissedWords);
+  renderHighScores(lastHighScores);
+}
 
 // ---- State ----
 let wordSet = null; // Set<string> uppercase, dictionary
@@ -311,6 +411,7 @@ function formatTime(sec) {
 
 function updateHUD() {
   scoreEl.textContent = String(score);
+  scoreEl.classList.toggle("high-score", score > 100);
   timerEl.textContent = formatTime(timeLeft);
 }
 
@@ -321,10 +422,11 @@ function renderLengthCounts(targetEl, words) {
     const key = w.length >= 8 ? "8+" : String(w.length);
     counts[key] = (counts[key] || 0) + 1;
   });
+  const t = I18N[currentLang];
   targetEl.innerHTML = "";
   ["3", "4", "5", "6", "7", "8+"].forEach((key) => {
     const li = document.createElement("li");
-    li.textContent = `${key}文字: ${counts[key] || 0}個`;
+    li.textContent = `${t.lengthUnit(key)}: ${t.lengthCount(counts[key] || 0)}`;
     targetEl.appendChild(li);
   });
 }
@@ -350,16 +452,17 @@ function addHighScore(name, scoreValue) {
 }
 
 function renderHighScores(list) {
+  const t = I18N[currentLang];
   highScoreListEl.innerHTML = "";
   if (list.length === 0) {
     const li = document.createElement("li");
-    li.textContent = "まだ記録がありません";
+    li.textContent = t.highScoreEmpty;
     highScoreListEl.appendChild(li);
     return;
   }
   list.forEach((entry) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span>${entry.name}</span><span>${entry.score}点</span>`;
+    li.innerHTML = `<span>${entry.name}</span><span>${t.scorePts(entry.score)}</span>`;
     highScoreListEl.appendChild(li);
   });
 }
@@ -441,6 +544,7 @@ function endGame() {
   document.getElementById("player-name-select").classList.remove("hidden");
 
   const scores = score > 0 ? addHighScore(getPlayerName(), score) : getHighScores();
+  lastHighScores = scores;
   renderHighScores(scores);
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
@@ -454,6 +558,7 @@ function endGame() {
     const allWords = solveBoard();
     totalWordCountEl.textContent = String(allWords.size);
     const missed = [...allWords].filter((w) => !foundWords.has(w));
+    lastMissedWords = missed;
     renderLengthCounts(missedListEl, missed);
     solvingTextEl.classList.add("hidden");
     missedWordsEl.classList.remove("hidden");
@@ -488,6 +593,15 @@ function solveBoard() {
 // ---- Init ----
 async function init() {
   attachInputHandlers();
+  document.querySelectorAll('input[name="lang"]').forEach((radio) => {
+    radio.checked = radio.value === currentLang;
+    radio.addEventListener("change", () => {
+      currentLang = radio.value;
+      localStorage.setItem(LANG_KEY, currentLang);
+      applyLanguage();
+    });
+  });
+  applyLanguage();
   playerNameInput.value = localStorage.getItem(PLAYER_NAME_KEY) || "";
   startBtn.addEventListener("click", startGame);
   restartBtn.addEventListener("click", startGame);
@@ -509,7 +623,7 @@ async function init() {
     trie = buildTrie(wordSet);
     loadingOverlay.classList.add("hidden");
   } catch (err) {
-    loadingText.textContent = "辞書の読み込みに失敗しました。オンライン状態を確認してタップして再試行してください。";
+    loadingText.textContent = I18N[currentLang].loadingError;
     loadingOverlay.addEventListener("click", () => location.reload(), { once: true });
     return;
   }
