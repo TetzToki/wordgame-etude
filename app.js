@@ -11,6 +11,21 @@ const PLAYER_NAME_KEY = "wordscramble.playerName";
 const PLAYER_ID_KEY = "wordscramble.playerId";
 const MAX_HIGH_SCORES = 5;
 
+// ---- Shared leaderboard (JSONBin.io) ----
+// SECURITY NOTE: this Master Key is embedded in client-side code and is visible to anyone
+// who views the page source, so anyone could read/write/delete the shared bin with it.
+// This is an accepted trade-off for a casual, low-stakes leaderboard (no abuse protection).
+// Fill these in with your own JSONBin.io Bin ID / Master Key to enable sharing; leave blank
+// to keep high scores purely local (per-browser), which is the default fallback behavior.
+const LEADERBOARD_BIN_ID = "";
+const LEADERBOARD_API_KEY = "";
+const LEADERBOARD_URL = `https://api.jsonbin.io/v3/b/${LEADERBOARD_BIN_ID}`;
+
+function sharedLeaderboardEnabled() {
+  return Boolean(LEADERBOARD_BIN_ID && LEADERBOARD_API_KEY);
+}
+
+
 // Classic "New Boggle" 16-cube letter distribution.
 // 'Q' faces are treated as a combined "Qu" tile.
 const DICE = [
@@ -511,6 +526,43 @@ function addHighScore(name, scoreValue, duration, playerId) {
   return all;
 }
 
+// Fetches the shared leaderboard, optionally merges in one entry, and writes it back.
+// Pass entry=null for a read-only refresh. Returns null (and leaves local data untouched)
+// if the shared leaderboard isn't configured or the network call fails.
+async function syncSharedHighScores(entry) {
+  if (!sharedLeaderboardEnabled()) return null;
+  try {
+    const res = await fetch(`${LEADERBOARD_URL}/latest`, {
+      headers: { "X-Master-Key": LEADERBOARD_API_KEY, "X-Bin-Meta": "false" },
+    });
+    if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+    const remote = await res.json();
+    const all = remote && typeof remote === "object" && !Array.isArray(remote) ? remote : {};
+    if (!entry) return all;
+
+    const list = Array.isArray(all[entry.duration]) ? all[entry.duration] : [];
+    const existingIdx = list.findIndex((e) => e.id === entry.id);
+    if (existingIdx >= 0) {
+      if (entry.score > list[existingIdx].score) list[existingIdx].score = entry.score;
+      list[existingIdx].name = entry.name;
+    } else {
+      list.push({ id: entry.id, name: entry.name, score: entry.score });
+    }
+    list.sort((a, b) => b.score - a.score);
+    all[entry.duration] = list.slice(0, MAX_HIGH_SCORES);
+
+    const putRes = await fetch(LEADERBOARD_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Master-Key": LEADERBOARD_API_KEY },
+      body: JSON.stringify(all),
+    });
+    if (!putRes.ok) throw new Error(`update failed: ${putRes.status}`);
+    return all;
+  } catch (_err) {
+    return null;
+  }
+}
+
 function renderHighScoreList(targetEl, list) {
   const t = I18N[currentLang];
   targetEl.innerHTML = "";
@@ -623,6 +675,15 @@ function endGame() {
   const scores = score > 0 ? addHighScore(getPlayerName(), score, gameDuration, getPlayerId()) : getAllHighScores();
   lastHighScores = scores;
   renderHighScores(scores);
+
+  // Sync with the shared leaderboard in the background; re-render if/when it succeeds.
+  const entry = score > 0 ? { name: getPlayerName(), score, duration: gameDuration, id: getPlayerId() } : null;
+  syncSharedHighScores(entry).then((remote) => {
+    if (!remote) return;
+    localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(remote));
+    lastHighScores = remote;
+    renderHighScores(remote);
+  });
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
   if (score > best) {
