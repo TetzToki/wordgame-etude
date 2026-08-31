@@ -74,6 +74,8 @@ const foundSummaryPrefixEl = document.getElementById("found-summary-prefix");
 const missedHeadingEl = document.getElementById("missed-heading");
 const highScoreHeadingEl = document.getElementById("high-score-heading");
 const finalScoreLabelTextEl = document.getElementById("final-score-label-text");
+const howToPlayHeadingEl = document.getElementById("how-to-play-heading");
+const howToPlayListEl = document.getElementById("how-to-play-list");
 
 // ---- i18n ----
 const LANG_KEY = "wordscramble.lang";
@@ -98,6 +100,13 @@ const I18N = {
     highScoreEmpty: "まだ記録がありません",
     finalScoreLabel: "SCORE",
     restartBtn: "もう一度プレイ",
+    howToPlayHeading: "あそびかた",
+    howToPlaySteps: [
+      "隣り合うマスをなぞって単語をつなげよう",
+      "3文字以上の単語が得点になる",
+      "指を離すと単語が確定",
+      "制限時間内にできるだけ多くの単語を見つけよう",
+    ],
     lengthUnit: (key) => (key === "8+" ? "8+文字" : `${key}文字`),
     lengthCount: (n) => `${n}個`,
     scorePts: (n) => `${n}点`,
@@ -122,6 +131,13 @@ const I18N = {
     highScoreEmpty: "No records yet",
     finalScoreLabel: "SCORE",
     restartBtn: "Play Again",
+    howToPlayHeading: "How to Play",
+    howToPlaySteps: [
+      "Drag across adjacent letters to connect them into a word",
+      "Words of 3+ letters score points",
+      "Release your finger to submit the word",
+      "Find as many words as you can before time runs out",
+    ],
     lengthUnit: (key) => (key === "8+" ? "8+ letters" : `${key} letters`),
     lengthCount: (n) => `${n}`,
     scorePts: (n) => `${n} pts`,
@@ -156,6 +172,13 @@ function applyLanguage() {
   highScoreHeadingEl.textContent = t.highScoreHeading;
   finalScoreLabelTextEl.textContent = t.finalScoreLabel;
   restartBtn.textContent = t.restartBtn;
+  howToPlayHeadingEl.textContent = t.howToPlayHeading;
+  howToPlayListEl.innerHTML = "";
+  t.howToPlaySteps.forEach((step) => {
+    const li = document.createElement("li");
+    li.textContent = step;
+    howToPlayListEl.appendChild(li);
+  });
   renderLengthCounts(lengthBreakdownEl, foundWords);
   renderLengthCounts(missedListEl, lastMissedWords);
   renderHighScores(lastHighScores);
