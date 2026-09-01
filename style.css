@@ -130,6 +130,14 @@ html, body {
   transform: scale(0.94);
 }
 
+.cell.hit {
+  box-shadow: 0 0 0 3px #4cd137, 0 0 14px 4px rgba(76, 209, 55, 0.9);
+}
+
+.cell.miss {
+  box-shadow: 0 0 0 3px #ff3b30, 0 0 14px 4px rgba(255, 59, 48, 0.9);
+}
+
 #found-panel {
   flex: 1;
   overflow-y: auto;

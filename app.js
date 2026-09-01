@@ -415,9 +415,23 @@ function moveSelect(x, y) {
 function endSelect() {
   if (!selecting) return;
   selecting = false;
-  submitWord(path);
+  const hit = submitWord(path);
+  flashSelection(path, hit);
   path = [];
   updateSelectionUI();
+}
+
+// Briefly glow the just-submitted tiles green (hit) or red (miss) as feedback.
+function flashSelection(selectedPath, hit) {
+  if (hit === null || selectedPath.length === 0) return;
+  const cls = hit ? "hit" : "miss";
+  const cells = selectedPath
+    .map((idx) => boardEl.querySelector(`.cell[data-idx="${idx}"]`))
+    .filter(Boolean);
+  cells.forEach((cell) => cell.classList.add(cls));
+  setTimeout(() => {
+    cells.forEach((cell) => cell.classList.remove(cls));
+  }, 400);
 }
 
 function attachInputHandlers() {
@@ -449,12 +463,13 @@ function attachInputHandlers() {
 }
 
 // ---- Word submission ----
+// Returns true (hit), false (miss), or null (no selection, e.g. a plain tap) for flash feedback.
 function submitWord(selectedPath) {
-  if (selectedPath.length === 0) return;
+  if (selectedPath.length === 0) return null;
   const word = selectedPath.map((idx) => board[idx].value).join("");
-  if (word.length < MIN_WORD_LEN) return;
-  if (foundWords.has(word)) return;
-  if (!wordSet.has(word)) return;
+  if (word.length < MIN_WORD_LEN) return false;
+  if (foundWords.has(word)) return false;
+  if (!wordSet.has(word)) return false;
   foundWords.add(word);
   score += wordScore(selectedPath, word);
   updateHUD();
@@ -462,6 +477,7 @@ function submitWord(selectedPath) {
   li.textContent = word;
   foundListEl.appendChild(li);
   foundCountEl.textContent = String(foundWords.size);
+  return true;
 }
 
 // ---- HUD ----
@@ -677,12 +693,25 @@ function endGame() {
   renderHighScores(scores);
 
   // Sync with the shared leaderboard in the background; re-render if/when it succeeds.
+  // A single retry guards against a one-off network hiccup (e.g. flaky mobile connections)
+  // silently leaving the display on stale/incomplete local-only data.
   const entry = score > 0 ? { name: getPlayerName(), score, duration: gameDuration, id: getPlayerId() } : null;
   syncSharedHighScores(entry).then((remote) => {
-    if (!remote) return;
-    localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(remote));
-    lastHighScores = remote;
-    renderHighScores(remote);
+    if (remote) {
+      localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(remote));
+      lastHighScores = remote;
+      renderHighScores(remote);
+      return;
+    }
+    if (!sharedLeaderboardEnabled()) return;
+    setTimeout(() => {
+      syncSharedHighScores(entry).then((retryRemote) => {
+        if (!retryRemote) return;
+        localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(retryRemote));
+        lastHighScores = retryRemote;
+        renderHighScores(retryRemote);
+      });
+    }, 1500);
   });
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
@@ -755,6 +784,14 @@ async function init() {
 
   const best = Number(localStorage.getItem(BEST_SCORE_KEY) || "0");
   bestEl.textContent = String(best);
+
+  // Refresh the local cache with the shared leaderboard as early as possible so the
+  // result screen isn't stuck showing a stale snapshot from a previous visit.
+  syncSharedHighScores(null).then((remote) => {
+    if (!remote) return;
+    localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(remote));
+    lastHighScores = remote;
+  });
 
   try {
     wordSet = await loadWordList();
