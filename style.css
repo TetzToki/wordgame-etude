@@ -443,8 +443,14 @@ body.playing #how-to-play {
 }
 
 #high-score-panel h3 {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   font-size: 14px;
+  color: var(--muted);
+}
+
+#high-score-note {
+  margin: 0 0 8px;
+  font-size: 11px;
   color: var(--muted);
 }
 

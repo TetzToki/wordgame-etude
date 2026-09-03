@@ -110,6 +110,7 @@ const gameoverHeadingEl = document.getElementById("gameover-heading");
 const foundSummaryPrefixEl = document.getElementById("found-summary-prefix");
 const missedHeadingEl = document.getElementById("missed-heading");
 const highScoreHeadingEl = document.getElementById("high-score-heading");
+const highScoreNoteEl = document.getElementById("high-score-note");
 const finalScoreLabelTextEl = document.getElementById("final-score-label-text");
 const howToPlayHeadingEl = document.getElementById("how-to-play-heading");
 const howToPlayListEl = document.getElementById("how-to-play-list");
@@ -133,7 +134,8 @@ const I18N = {
     gameoverHeading: "ゲーム終了！",
     foundSummaryPrefix: "見つけた単語:",
     missedHeading: "見逃した単語(文字数別)",
-    highScoreHeading: "ハイスコア ランキング",
+    highScoreHeading: "ハイスコア ランキング（週間）",
+    highScoreNote: "毎週月曜0:00にリセットされます",
     highScoreEmpty: "まだ記録がありません",
     finalScoreLabel: "SCORE",
     restartBtn: "もう一度プレイ",
@@ -165,7 +167,8 @@ const I18N = {
     gameoverHeading: "Game Over!",
     foundSummaryPrefix: "Words found:",
     missedHeading: "Missed words (by length)",
-    highScoreHeading: "High Score Ranking",
+    highScoreHeading: "High Score Ranking (Weekly)",
+    highScoreNote: "Resets every Monday at 0:00 JST",
     highScoreEmpty: "No records yet",
     finalScoreLabel: "SCORE",
     restartBtn: "Play Again",
@@ -209,6 +212,7 @@ function applyLanguage() {
   foundSummaryPrefixEl.textContent = t.foundSummaryPrefix;
   missedHeadingEl.textContent = t.missedHeading;
   highScoreHeadingEl.textContent = t.highScoreHeading;
+  highScoreNoteEl.textContent = t.highScoreNote;
   finalScoreLabelTextEl.textContent = t.finalScoreLabel;
   restartBtn.textContent = t.restartBtn;
   highScoreLabel60El.textContent = t.duration60;
@@ -526,10 +530,32 @@ function renderLengthCounts(targetEl, words) {
 }
 
 // ---- High scores ----
+// Weekly ranking: each entry is tagged with the epoch ms it was saved/refreshed at, and any
+// entry from before the current week's Monday 0:00 JST is filtered out on every read. This
+// makes the reset happen naturally whenever anyone loads the page, with no scheduled job needed.
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+function currentWeekStartMs(ref = Date.now()) {
+  const jst = new Date(ref + JST_OFFSET_MS);
+  const daysSinceMonday = (jst.getUTCDay() + 6) % 7; // Mon=0 ... Sun=6
+  const jstMidnight = Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate());
+  return jstMidnight - daysSinceMonday * 86400000 - JST_OFFSET_MS;
+}
+
+function pruneToCurrentWeek(all) {
+  const weekStart = currentWeekStartMs();
+  const pruned = {};
+  for (const duration of Object.keys(all)) {
+    const list = Array.isArray(all[duration]) ? all[duration] : [];
+    pruned[duration] = list.filter((e) => typeof e.ts === "number" && e.ts >= weekStart);
+  }
+  return pruned;
+}
+
 function getAllHighScores() {
   try {
     const raw = JSON.parse(localStorage.getItem(HIGH_SCORE_KEY) || "{}");
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw;
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) return pruneToCurrentWeek(raw);
   } catch (_err) {
     // ignore malformed storage
   }
@@ -545,12 +571,14 @@ function addHighScore(name, scoreValue, duration, playerId) {
   const all = getAllHighScores();
   const list = Array.isArray(all[duration]) ? all[duration] : [];
   const existingIdx = list.findIndex((e) => e.id === playerId);
+  const now = Date.now();
   if (existingIdx >= 0) {
     // Same browser/player: keep only their best score, but always refresh the displayed name.
     if (scoreValue > list[existingIdx].score) list[existingIdx].score = scoreValue;
     list[existingIdx].name = name;
+    list[existingIdx].ts = now;
   } else {
-    list.push({ id: playerId, name, score: scoreValue });
+    list.push({ id: playerId, name, score: scoreValue, ts: now });
   }
   list.sort((a, b) => b.score - a.score);
   all[duration] = list.slice(0, MAX_HIGH_SCORES);
@@ -569,16 +597,19 @@ async function syncSharedHighScores(entry) {
     });
     if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
     const remote = await res.json();
-    const all = remote && typeof remote === "object" && !Array.isArray(remote) ? remote : {};
+    const raw = remote && typeof remote === "object" && !Array.isArray(remote) ? remote : {};
+    const all = pruneToCurrentWeek(raw);
     if (!entry) return all;
 
     const list = Array.isArray(all[entry.duration]) ? all[entry.duration] : [];
     const existingIdx = list.findIndex((e) => e.id === entry.id);
+    const now = Date.now();
     if (existingIdx >= 0) {
       if (entry.score > list[existingIdx].score) list[existingIdx].score = entry.score;
       list[existingIdx].name = entry.name;
+      list[existingIdx].ts = now;
     } else {
-      list.push({ id: entry.id, name: entry.name, score: entry.score });
+      list.push({ id: entry.id, name: entry.name, score: entry.score, ts: now });
     }
     list.sort((a, b) => b.score - a.score);
     all[entry.duration] = list.slice(0, MAX_HIGH_SCORES);
