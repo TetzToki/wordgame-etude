@@ -79,9 +79,15 @@ html, body {
   100% { background-position: 400% 50%; }
 }
 
-#current-word {
+#current-word-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
   min-height: 32px;
-  text-align: center;
+}
+
+#current-word {
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -158,21 +164,11 @@ html, body {
   white-space: nowrap;
 }
 
-#retire-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 34px;
-}
-
 #score-popup {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 24px;
   color: #4cd137;
   opacity: 0;
-  min-width: 28px;
-  text-align: right;
 }
 
 #score-popup.show {
@@ -262,8 +258,7 @@ html, body {
    on screen without scrolling (important on iPhone Safari with a short viewport). */
 body:not(.playing) #board,
 body:not(.playing) #found-list,
-body:not(.playing) #current-word,
-body:not(.playing) #retire-row {
+body:not(.playing) #current-word-row {
   display: none;
 }
 

@@ -35,14 +35,14 @@
 
     <ul id="found-list" aria-live="polite"></ul>
 
-    <div id="current-word" aria-live="polite"></div>
+    <div id="current-word-row">
+      <div id="current-word" aria-live="polite"></div>
+      <span id="score-popup" aria-hidden="true"></span>
+    </div>
 
     <main id="board" aria-label="文字盤"></main>
 
-    <div id="retire-row">
-      <span id="score-popup" aria-hidden="true"></span>
-      <button id="retire-btn" type="button" class="hidden">リタイヤ</button>
-    </div>
+    <button id="retire-btn" type="button" class="hidden">リタイヤ</button>
 
     <h1 id="game-title">Scramble</h1>
 
@@ -66,7 +66,7 @@
 
     <button id="start-btn" type="button">スタート</button>
 
-    <p id="version-info">v2.2 (2026-09-03)</p>
+    <p id="version-info">v2.3 (2026-09-03)</p>
 
     <div id="start-high-score-panel" class="high-score-panel">
       <h3 id="start-high-score-heading">ハイスコア ランキング（週間）</h3>
