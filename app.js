@@ -500,6 +500,7 @@ function submitWord(selectedPath) {
   while (foundListEl.children.length > MAX_FOUND_QUEUE) {
     foundListEl.removeChild(foundListEl.lastChild);
   }
+  foundListEl.scrollLeft = 0; // keep the newest word in view; swipe right to browse older ones
   showScorePopup(gained);
   return true;
 }
@@ -868,6 +869,7 @@ async function init() {
     if (!remote) return;
     localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(remote));
     lastHighScores = remote;
+    renderHighScores(remote);
   });
 
   try {
