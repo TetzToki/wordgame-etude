@@ -11,6 +11,7 @@ const PLAYER_NAME_KEY = "wordscramble.playerName";
 const PLAYER_ID_KEY = "wordscramble.playerId";
 const MAX_HIGH_SCORES = 5;
 const MAX_WORD_LIST_PREVIEW = 10;
+const MAX_FOUND_QUEUE = 30;
 
 // ---- Shared leaderboard (JSONBin.io) ----
 // SECURITY NOTE: this Master Key is embedded in client-side code and is visible to anyone
@@ -76,7 +77,7 @@ const timerEl = document.getElementById("timer");
 const bestEl = document.getElementById("best");
 const currentWordEl = document.getElementById("current-word");
 const foundListEl = document.getElementById("found-list");
-const foundCountEl = document.getElementById("found-count");
+const scorePopupEl = document.getElementById("score-popup");
 const startBtn = document.getElementById("start-btn");
 const restartBtn = document.getElementById("restart-btn");
 const loadingOverlay = document.getElementById("loading-overlay");
@@ -97,10 +98,17 @@ const highScoreList180El = document.getElementById("high-score-list-180");
 const highScoreLabel60El = document.getElementById("high-score-label-60");
 const highScoreLabel120El = document.getElementById("high-score-label-120");
 const highScoreLabel180El = document.getElementById("high-score-label-180");
+const startHighScoreList60El = document.getElementById("start-high-score-list-60");
+const startHighScoreList120El = document.getElementById("start-high-score-list-120");
+const startHighScoreList180El = document.getElementById("start-high-score-list-180");
+const startHighScoreLabel60El = document.getElementById("start-high-score-label-60");
+const startHighScoreLabel120El = document.getElementById("start-high-score-label-120");
+const startHighScoreLabel180El = document.getElementById("start-high-score-label-180");
+const startHighScoreHeadingEl = document.getElementById("start-high-score-heading");
+const startHighScoreNoteEl = document.getElementById("start-high-score-note");
 const hudLabelScoreEl = document.getElementById("hud-label-score");
 const hudLabelTimeEl = document.getElementById("hud-label-time");
 const hudLabelBestEl = document.getElementById("hud-label-best");
-const foundHeadingTextEl = document.getElementById("found-heading-text");
 const playerNameLabelEl = document.getElementById("player-name-label");
 const durationLabel60El = document.getElementById("duration-label-60");
 const durationLabel120El = document.getElementById("duration-label-120");
@@ -197,7 +205,7 @@ function applyLanguage() {
   hudLabelTimeEl.textContent = t.hudTime;
   hudLabelBestEl.textContent = t.hudBest;
   boardEl.setAttribute("aria-label", t.boardAria);
-  foundHeadingTextEl.textContent = t.foundHeading;
+  foundListEl.setAttribute("aria-label", t.foundHeading);
   playerNameLabelEl.textContent = t.playerNameLabel;
   playerNameInput.placeholder = t.playerNamePlaceholder;
   document.getElementById("duration-select").setAttribute("aria-label", t.durationAria);
@@ -218,6 +226,11 @@ function applyLanguage() {
   highScoreLabel60El.textContent = t.duration60;
   highScoreLabel120El.textContent = t.duration120;
   highScoreLabel180El.textContent = t.duration180;
+  startHighScoreHeadingEl.textContent = t.highScoreHeading;
+  startHighScoreNoteEl.textContent = t.highScoreNote;
+  startHighScoreLabel60El.textContent = t.duration60;
+  startHighScoreLabel120El.textContent = t.duration120;
+  startHighScoreLabel180El.textContent = t.duration180;
   howToPlayHeadingEl.textContent = t.howToPlayHeading;
   howToPlayListEl.innerHTML = "";
   t.howToPlaySteps.forEach((step) => {
@@ -478,13 +491,26 @@ function submitWord(selectedPath) {
   if (foundWords.has(word)) return false;
   if (!wordSet.has(word)) return false;
   foundWords.add(word);
-  score += wordScore(selectedPath, word);
+  const gained = wordScore(selectedPath, word);
+  score += gained;
   updateHUD();
   const li = document.createElement("li");
   li.textContent = word;
-  foundListEl.appendChild(li);
-  foundCountEl.textContent = String(foundWords.size);
+  foundListEl.prepend(li);
+  while (foundListEl.children.length > MAX_FOUND_QUEUE) {
+    foundListEl.removeChild(foundListEl.lastChild);
+  }
+  showScorePopup(gained);
   return true;
+}
+
+// Shows a "+N" indicator next to the retire button (away from the board, so it never
+// interferes with dragging) and lets it fade upward via CSS animation.
+function showScorePopup(delta) {
+  scorePopupEl.textContent = `+${delta}`;
+  scorePopupEl.classList.remove("show");
+  void scorePopupEl.offsetWidth; // restart the animation even if triggered rapidly
+  scorePopupEl.classList.add("show");
 }
 
 // ---- HUD ----
@@ -646,6 +672,9 @@ function renderHighScores(all) {
   renderHighScoreList(highScoreList60El, all[60] || []);
   renderHighScoreList(highScoreList120El, all[120] || []);
   renderHighScoreList(highScoreList180El, all[180] || []);
+  renderHighScoreList(startHighScoreList60El, all[60] || []);
+  renderHighScoreList(startHighScoreList120El, all[120] || []);
+  renderHighScoreList(startHighScoreList180El, all[180] || []);
 }
 
 function getPlayerName() {
@@ -680,8 +709,9 @@ function resetGameState() {
   selecting = false;
   timerStarted = false;
   foundListEl.innerHTML = "";
-  foundCountEl.textContent = "0";
   currentWordEl.textContent = "";
+  scorePopupEl.classList.remove("show");
+  scorePopupEl.textContent = "";
   renderBoard();
   updateHUD();
 }

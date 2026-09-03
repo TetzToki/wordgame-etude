@@ -138,34 +138,51 @@ html, body {
   box-shadow: 0 0 0 3px #ff3b30, 0 0 14px 4px rgba(255, 59, 48, 0.9);
 }
 
-#found-panel {
-  flex: 1;
-  overflow-y: auto;
-  background: var(--panel);
-  border-radius: 12px;
-  padding: 8px 14px;
-}
-
-#found-panel h2 {
-  font-size: 14px;
-  color: var(--muted);
-  margin: 6px 0;
-}
-
 #found-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 4px 2px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
   gap: 6px;
+  min-height: 30px;
 }
 
 #found-list li {
+  flex-shrink: 0;
   background: var(--tile);
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 14px;
+  white-space: nowrap;
+}
+
+#retire-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 34px;
+}
+
+#score-popup {
+  font-weight: 700;
+  font-size: 14px;
+  color: #4cd137;
+  opacity: 0;
+  min-width: 28px;
+  text-align: right;
+}
+
+#score-popup.show {
+  animation: score-popup-fade 900ms ease-out forwards;
+}
+
+@keyframes score-popup-fade {
+  0% { opacity: 1; transform: translateY(2px); }
+  20% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 0; transform: translateY(-14px); }
 }
 
 #start-btn, #restart-btn {
@@ -244,8 +261,9 @@ html, body {
 /* Before a game starts, hide gameplay-only sections so the start button always fits
    on screen without scrolling (important on iPhone Safari with a short viewport). */
 body:not(.playing) #board,
-body:not(.playing) #found-panel,
-body:not(.playing) #current-word {
+body:not(.playing) #found-list,
+body:not(.playing) #current-word,
+body:not(.playing) #retire-row {
   display: none;
 }
 
@@ -286,7 +304,8 @@ body.playing #version-info {
 }
 
 body.playing #game-title,
-body.playing #how-to-play {
+body.playing #how-to-play,
+body.playing #start-high-score-panel {
   display: none;
 }
 
@@ -438,17 +457,17 @@ body.playing #how-to-play {
   display: none;
 }
 
-#high-score-panel {
+.high-score-panel {
   margin: 16px 0;
 }
 
-#high-score-panel h3 {
+.high-score-panel h3 {
   margin: 0 0 4px;
   font-size: 14px;
   color: var(--muted);
 }
 
-#high-score-note {
+.high-score-note {
   margin: 0 0 8px;
   font-size: 11px;
   color: var(--muted);

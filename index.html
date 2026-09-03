@@ -33,16 +33,16 @@
       </div>
     </header>
 
+    <ul id="found-list" aria-live="polite"></ul>
+
     <div id="current-word" aria-live="polite"></div>
 
     <main id="board" aria-label="文字盤"></main>
 
-    <button id="retire-btn" type="button" class="hidden">リタイヤ</button>
-
-    <section id="found-panel">
-      <h2><span id="found-heading-text">見つけた単語</span> (<span id="found-count">0</span>)</h2>
-      <ul id="found-list"></ul>
-    </section>
+    <div id="retire-row">
+      <span id="score-popup" aria-hidden="true"></span>
+      <button id="retire-btn" type="button" class="hidden">リタイヤ</button>
+    </div>
 
     <h1 id="game-title">Scramble</h1>
 
@@ -66,7 +66,24 @@
 
     <button id="start-btn" type="button">スタート</button>
 
-    <p id="version-info">v2.1 (2026-09-03)</p>
+    <p id="version-info">v2.2 (2026-09-03)</p>
+
+    <div id="start-high-score-panel" class="high-score-panel">
+      <h3 id="start-high-score-heading">ハイスコア ランキング（週間）</h3>
+      <p id="start-high-score-note" class="high-score-note">毎週月曜0:00にリセットされます</p>
+      <div class="high-score-group">
+        <h4 id="start-high-score-label-60">1分</h4>
+        <ol id="start-high-score-list-60"></ol>
+      </div>
+      <div class="high-score-group">
+        <h4 id="start-high-score-label-120">2分</h4>
+        <ol id="start-high-score-list-120"></ol>
+      </div>
+      <div class="high-score-group">
+        <h4 id="start-high-score-label-180">3分</h4>
+        <ol id="start-high-score-list-180"></ol>
+      </div>
+    </div>
   </div>
 
   <div id="loading-overlay" class="overlay">
@@ -88,9 +105,9 @@
         <span id="final-score">0</span>
       </div>
       <button id="restart-btn" type="button">もう一度プレイ</button>
-      <div id="high-score-panel">
+      <div id="high-score-panel" class="high-score-panel">
         <h3 id="high-score-heading">ハイスコア ランキング（週間）</h3>
-        <p id="high-score-note">毎週月曜0:00にリセットされます</p>
+        <p id="high-score-note" class="high-score-note">毎週月曜0:00にリセットされます</p>
         <div class="high-score-group">
           <h4 id="high-score-label-60">1分</h4>
           <ol id="high-score-list-60"></ol>
