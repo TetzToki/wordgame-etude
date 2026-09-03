@@ -10,6 +10,7 @@ const HIGH_SCORE_KEY = "wordscramble.highScores";
 const PLAYER_NAME_KEY = "wordscramble.playerName";
 const PLAYER_ID_KEY = "wordscramble.playerId";
 const MAX_HIGH_SCORES = 5;
+const MAX_WORD_LIST_PREVIEW = 10;
 
 // ---- Shared leaderboard (JSONBin.io) ----
 // SECURITY NOTE: this Master Key is embedded in client-side code and is visible to anyone
@@ -146,6 +147,7 @@ const I18N = {
     lengthUnit: (key) => (key === "8+" ? "8+文字" : `${key}文字`),
     lengthCount: (n) => `${n}個`,
     scorePts: (n) => `${n}点`,
+    andMore: (n) => `他${n}個は省略`,
   },
   en: {
     hudScore: "SCORE", hudTime: "TIME", hudBest: "BEST",
@@ -177,6 +179,7 @@ const I18N = {
     lengthUnit: (key) => (key === "8+" ? "8+ letters" : `${key} letters`),
     lengthCount: (n) => `${n}`,
     scorePts: (n) => `${n} pts`,
+    andMore: (n) => `+${n} more omitted`,
   },
 };
 
@@ -495,16 +498,29 @@ function updateHUD() {
 
 // ---- Result breakdown ----
 function renderLengthCounts(targetEl, words) {
-  const counts = {};
+  const groups = {};
   words.forEach((w) => {
     const key = w.length >= 8 ? "8+" : String(w.length);
-    counts[key] = (counts[key] || 0) + 1;
+    (groups[key] = groups[key] || []).push(w);
   });
   const t = I18N[currentLang];
   targetEl.innerHTML = "";
   ["3", "4", "5", "6", "7", "8+"].forEach((key) => {
+    const list = groups[key] || [];
     const li = document.createElement("li");
-    li.textContent = `${t.lengthUnit(key)}: ${t.lengthCount(counts[key] || 0)}`;
+    const summary = document.createElement("div");
+    summary.textContent = `${t.lengthUnit(key)}: ${t.lengthCount(list.length)}`;
+    li.appendChild(summary);
+    if (list.length > 0) {
+      summary.classList.add("length-summary");
+      const detail = document.createElement("div");
+      detail.className = "length-detail hidden";
+      const shown = list.slice(0, MAX_WORD_LIST_PREVIEW);
+      const omitted = list.length - shown.length;
+      detail.textContent = shown.join(", ") + (omitted > 0 ? ` …${t.andMore(omitted)}` : "");
+      li.appendChild(detail);
+      summary.addEventListener("click", () => detail.classList.toggle("hidden"));
+    }
     targetEl.appendChild(li);
   });
 }

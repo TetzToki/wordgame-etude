@@ -420,6 +420,24 @@ body.playing #how-to-play {
   font-size: 13px;
 }
 
+.length-summary {
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.length-detail {
+  margin-top: 6px;
+  max-width: 260px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.length-detail.hidden {
+  display: none;
+}
+
 #high-score-panel {
   margin: 16px 0;
 }

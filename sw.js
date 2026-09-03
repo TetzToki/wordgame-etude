@@ -1,4 +1,4 @@
-const CACHE_NAME = "word-scramble-v14";
+const CACHE_NAME = "word-scramble-v15";
 const APP_SHELL = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -18,6 +18,15 @@ self.addEventListener("activate", (event) => {
 // Cache-first with runtime caching, so the dictionary and app shell work offline after first load.
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+
+  // Never let the shared leaderboard API go through the cache: it must always
+  // reflect the live server state, or cross-device sync silently serves stale,
+  // conflicting snapshots and overwrites other players' scores on the next save.
+  if (new URL(req.url).hostname === "api.jsonbin.io") {
+    event.respondWith(fetch(req));
+    return;
+  }
+
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
