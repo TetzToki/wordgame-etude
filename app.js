@@ -114,7 +114,6 @@ const playerNameLabelEl = document.getElementById("player-name-label");
 const durationLabel60El = document.getElementById("duration-label-60");
 const durationLabel120El = document.getElementById("duration-label-120");
 const durationLabel180El = document.getElementById("duration-label-180");
-const scoringInfoEl = document.getElementById("scoring-info");
 const skinSelectEl = document.getElementById("skin-select");
 const skinLabelDefaultEl = document.getElementById("skin-label-default");
 const skinLabelLightEl = document.getElementById("skin-label-light");
@@ -143,7 +142,6 @@ const I18N = {
     duration60: "1分", duration120: "2分", duration180: "3分",
     skinAria: "外観",
     skinDefault: "デフォルト", skinLight: "ライト", skinMetal: "メタリック", skinWood: "ウッド",
-    scoringInfo: "得点 = タイル点数の合計 ＋ 文字数ボーナス（3文字:+0 / 4文字以上:+(文字数-3)）",
     startBtn: "スタート",
     retireBtn: "リタイヤ",
     loadingText: "辞書を読み込み中...",
@@ -162,6 +160,7 @@ const I18N = {
       "3文字以上の単語が得点になる",
       "指を離すと単語が確定",
       "制限時間内にできるだけ多くの単語を見つけよう",
+      "得点 = タイル点数の合計 ＋ 文字数ボーナス（3文字:+0 / 4文字以上:+(文字数-3)）",
     ],
     lengthUnit: (key) => (key === "8+" ? "8+文字" : `${key}文字`),
     lengthCount: (n) => `${n}個`,
@@ -178,7 +177,6 @@ const I18N = {
     duration60: "1 min", duration120: "2 min", duration180: "3 min",
     skinAria: "Appearance",
     skinDefault: "Default", skinLight: "Light", skinMetal: "Metallic", skinWood: "Wood",
-    scoringInfo: "Score = sum of tile points + length bonus (3 letters: +0 / 4+ letters: +(length-3))",
     startBtn: "Start",
     retireBtn: "Give Up",
     loadingText: "Loading dictionary...",
@@ -197,6 +195,7 @@ const I18N = {
       "Words of 3+ letters score points",
       "Release your finger to submit the word",
       "Find as many words as you can before time runs out",
+      "Score = sum of tile points + length bonus (3 letters: +0 / 4+ letters: +(length-3))",
     ],
     lengthUnit: (key) => (key === "8+" ? "8+ letters" : `${key} letters`),
     lengthCount: (n) => `${n}`,
@@ -228,7 +227,6 @@ function applyLanguage() {
   skinLabelLightEl.textContent = t.skinLight;
   skinLabelMetalEl.textContent = t.skinMetal;
   skinLabelWoodEl.textContent = t.skinWood;
-  scoringInfoEl.textContent = t.scoringInfo;
   startBtn.textContent = t.startBtn;
   retireBtn.textContent = t.retireBtn;
   loadingText.textContent = t.loadingText;
@@ -760,7 +758,6 @@ function startGame() {
   startBtn.classList.add("hidden");
   retireBtn.classList.remove("hidden");
   document.getElementById("duration-select").classList.add("hidden");
-  document.getElementById("scoring-info").classList.add("hidden");
   document.getElementById("player-name-select").classList.add("hidden");
   skinSelectEl.classList.add("hidden");
   langToggleEl.classList.add("hidden");
@@ -788,7 +785,6 @@ function endGame() {
   startBtn.classList.remove("hidden");
   retireBtn.classList.add("hidden");
   document.getElementById("duration-select").classList.remove("hidden");
-  document.getElementById("scoring-info").classList.remove("hidden");
   document.getElementById("player-name-select").classList.remove("hidden");
   skinSelectEl.classList.remove("hidden");
   langToggleEl.classList.remove("hidden");
