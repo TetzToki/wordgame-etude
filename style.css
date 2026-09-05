@@ -4,8 +4,49 @@
   --tile: #333a4d;
   --tile-selected: #4c7cf0;
   --accent: #4c7cf0;
+  --accent2: #ff9800;
   --text: #f0f2f8;
   --muted: #9aa2b8;
+  color-scheme: dark;
+}
+
+/* Light skin: bright, airy palette. */
+body.skin-light {
+  --bg: #f4f6fb;
+  --panel: #ffffff;
+  --tile: #e7ebf5;
+  --tile-selected: #4c7cf0;
+  --accent: #3a63d8;
+  --accent2: #ff7043;
+  --text: #1b1f2a;
+  --muted: #6b7280;
+  color-scheme: light;
+}
+
+/* Metallic skin: cool steel tones with a violet-silver mystique. */
+body.skin-metal {
+  --bg: #2a2d33;
+  --panel: #3b3f47;
+  --tile: #4b505a;
+  --tile-selected: #9aa5b8;
+  --accent: #8a93a8;
+  --accent2: #b39ddb;
+  --text: #e8ecf2;
+  --muted: #9098a5;
+  color-scheme: dark;
+  background: linear-gradient(160deg, #3b3f47, #1c1e22);
+}
+
+/* Wood skin: warm timber tones. */
+body.skin-wood {
+  --bg: #3b2415;
+  --panel: #5a3921;
+  --tile: #79502c;
+  --tile-selected: #c68642;
+  --accent: #c68642;
+  --accent2: #e8b163;
+  --text: #fdf1e0;
+  --muted: #d2b48c;
   color-scheme: dark;
 }
 
@@ -201,6 +242,7 @@ html, body {
 
 .segmented-control {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -279,7 +321,7 @@ body.playing #version-info {
   font-size: clamp(28px, 9vw, 42px);
   font-weight: 900;
   letter-spacing: 0.03em;
-  background: linear-gradient(135deg, var(--accent), #ff9800);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

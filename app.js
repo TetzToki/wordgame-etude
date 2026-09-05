@@ -9,6 +9,7 @@ const BEST_SCORE_KEY = "wordscramble.bestScore";
 const HIGH_SCORE_KEY = "wordscramble.highScores";
 const PLAYER_NAME_KEY = "wordscramble.playerName";
 const PLAYER_ID_KEY = "wordscramble.playerId";
+const SKIN_KEY = "wordscramble.skin";
 const MAX_HIGH_SCORES = 5;
 const MAX_WORD_LIST_PREVIEW = 10;
 const MAX_FOUND_QUEUE = 30;
@@ -114,6 +115,12 @@ const durationLabel60El = document.getElementById("duration-label-60");
 const durationLabel120El = document.getElementById("duration-label-120");
 const durationLabel180El = document.getElementById("duration-label-180");
 const scoringInfoEl = document.getElementById("scoring-info");
+const skinSelectEl = document.getElementById("skin-select");
+const skinLabelDefaultEl = document.getElementById("skin-label-default");
+const skinLabelLightEl = document.getElementById("skin-label-light");
+const skinLabelMetalEl = document.getElementById("skin-label-metal");
+const skinLabelWoodEl = document.getElementById("skin-label-wood");
+const langToggleEl = document.getElementById("lang-toggle");
 const gameoverHeadingEl = document.getElementById("gameover-heading");
 const foundSummaryPrefixEl = document.getElementById("found-summary-prefix");
 const missedHeadingEl = document.getElementById("missed-heading");
@@ -134,6 +141,8 @@ const I18N = {
     playerNamePlaceholder: "名無し",
     durationAria: "制限時間",
     duration60: "1分", duration120: "2分", duration180: "3分",
+    skinAria: "外観",
+    skinDefault: "デフォルト", skinLight: "ライト", skinMetal: "メタリック", skinWood: "ウッド",
     scoringInfo: "得点 = タイル点数の合計 ＋ 文字数ボーナス（3文字:+0 / 4文字以上:+(文字数-3)）",
     startBtn: "スタート",
     retireBtn: "リタイヤ",
@@ -167,6 +176,8 @@ const I18N = {
     playerNamePlaceholder: "Anonymous",
     durationAria: "Time Limit",
     duration60: "1 min", duration120: "2 min", duration180: "3 min",
+    skinAria: "Appearance",
+    skinDefault: "Default", skinLight: "Light", skinMetal: "Metallic", skinWood: "Wood",
     scoringInfo: "Score = sum of tile points + length bonus (3 letters: +0 / 4+ letters: +(length-3))",
     startBtn: "Start",
     retireBtn: "Give Up",
@@ -212,6 +223,11 @@ function applyLanguage() {
   durationLabel60El.textContent = t.duration60;
   durationLabel120El.textContent = t.duration120;
   durationLabel180El.textContent = t.duration180;
+  skinSelectEl.setAttribute("aria-label", t.skinAria);
+  skinLabelDefaultEl.textContent = t.skinDefault;
+  skinLabelLightEl.textContent = t.skinLight;
+  skinLabelMetalEl.textContent = t.skinMetal;
+  skinLabelWoodEl.textContent = t.skinWood;
   scoringInfoEl.textContent = t.scoringInfo;
   startBtn.textContent = t.startBtn;
   retireBtn.textContent = t.retireBtn;
@@ -241,6 +257,13 @@ function applyLanguage() {
   renderLengthCounts(lengthBreakdownEl, foundWords);
   renderLengthCounts(missedListEl, lastMissedWords);
   renderHighScores(lastHighScores);
+}
+
+const SKIN_NAMES = ["light", "metal", "wood"];
+
+function applySkin(skin) {
+  document.body.classList.remove(...SKIN_NAMES.map((s) => `skin-${s}`));
+  if (SKIN_NAMES.includes(skin)) document.body.classList.add(`skin-${skin}`);
 }
 
 // ---- State ----
@@ -739,6 +762,8 @@ function startGame() {
   document.getElementById("duration-select").classList.add("hidden");
   document.getElementById("scoring-info").classList.add("hidden");
   document.getElementById("player-name-select").classList.add("hidden");
+  skinSelectEl.classList.add("hidden");
+  langToggleEl.classList.add("hidden");
 }
 
 function endGame() {
@@ -765,6 +790,8 @@ function endGame() {
   document.getElementById("duration-select").classList.remove("hidden");
   document.getElementById("scoring-info").classList.remove("hidden");
   document.getElementById("player-name-select").classList.remove("hidden");
+  skinSelectEl.classList.remove("hidden");
+  langToggleEl.classList.remove("hidden");
 
   const scores = score > 0 ? addHighScore(getPlayerName(), score, gameDuration, getPlayerId()) : getAllHighScores();
   lastHighScores = scores;
@@ -848,6 +875,15 @@ async function init() {
   });
   applyLanguage();
   playerNameInput.value = localStorage.getItem(PLAYER_NAME_KEY) || "";
+  const storedSkin = localStorage.getItem(SKIN_KEY) || "default";
+  applySkin(storedSkin);
+  document.querySelectorAll('input[name="skin"]').forEach((radio) => {
+    radio.checked = radio.value === storedSkin;
+    radio.addEventListener("change", () => {
+      localStorage.setItem(SKIN_KEY, radio.value);
+      applySkin(radio.value);
+    });
+  });
   startBtn.addEventListener("click", startGame);
   restartBtn.addEventListener("click", startGame);
   retireBtn.addEventListener("click", () => {
