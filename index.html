@@ -71,7 +71,7 @@
 
     <button id="start-btn" type="button">スタート</button>
 
-    <p id="version-info">v2.7 (2026-09-05)</p>
+    <p id="version-info">v2.8 (2026-09-07)</p>
 
     <div id="start-high-score-panel" class="high-score-panel">
       <h3 id="start-high-score-heading">ハイスコア ランキング（週間）</h3>
@@ -89,6 +89,8 @@
         <ol id="start-high-score-list-180"></ol>
       </div>
     </div>
+
+    <button id="quit-btn" type="button" class="btn-outline">ゲーム終了</button>
   </div>
 
   <div id="loading-overlay" class="overlay">
@@ -109,7 +111,10 @@
         <span class="final-score-label" id="final-score-label-text">SCORE</span>
         <span id="final-score">0</span>
       </div>
-      <button id="restart-btn" type="button">もう一度プレイ</button>
+      <div id="gameover-actions">
+        <button id="restart-btn" type="button">もう一度プレイ</button>
+        <button id="back-to-title-btn" type="button" class="btn-outline">タイトルに戻る</button>
+      </div>
       <div id="high-score-panel" class="high-score-panel">
         <h3 id="high-score-heading">ハイスコア ランキング（週間）</h3>
         <p id="high-score-note" class="high-score-note">毎週月曜0:00にリセットされます</p>

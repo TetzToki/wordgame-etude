@@ -240,6 +240,30 @@ html, body {
   cursor: pointer;
 }
 
+#gameover-actions {
+  display: flex;
+  gap: 10px;
+}
+
+#gameover-actions #restart-btn {
+  flex: 1;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--muted);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#quit-btn {
+  margin-top: 4px;
+}
+
 .segmented-control {
   display: flex;
   flex-wrap: wrap;
@@ -328,7 +352,8 @@ body.playing #version-info {
 
 body.playing #game-title,
 body.playing #how-to-play,
-body.playing #start-high-score-panel {
+body.playing #start-high-score-panel,
+body.playing #quit-btn {
   display: none;
 }
 

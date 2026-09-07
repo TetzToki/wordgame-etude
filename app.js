@@ -11,7 +11,6 @@ const PLAYER_NAME_KEY = "wordscramble.playerName";
 const PLAYER_ID_KEY = "wordscramble.playerId";
 const SKIN_KEY = "wordscramble.skin";
 const MAX_HIGH_SCORES = 5;
-const MAX_WORD_LIST_PREVIEW = 10;
 const MAX_FOUND_QUEUE = 30;
 
 // ---- Shared leaderboard (JSONBin.io) ----
@@ -81,6 +80,8 @@ const foundListEl = document.getElementById("found-list");
 const scorePopupEl = document.getElementById("score-popup");
 const startBtn = document.getElementById("start-btn");
 const restartBtn = document.getElementById("restart-btn");
+const backToTitleBtn = document.getElementById("back-to-title-btn");
+const quitBtn = document.getElementById("quit-btn");
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
 const gameoverOverlay = document.getElementById("gameover-overlay");
@@ -154,6 +155,8 @@ const I18N = {
     highScoreEmpty: "まだ記録がありません",
     finalScoreLabel: "SCORE",
     restartBtn: "もう一度プレイ",
+    backToTitleBtn: "タイトルに戻る",
+    quitBtn: "ゲーム終了",
     howToPlayHeading: "あそびかた",
     howToPlaySteps: [
       "隣り合うマス(斜め方向もOK)をなぞって単語をつなげよう",
@@ -165,7 +168,6 @@ const I18N = {
     lengthUnit: (key) => (key === "8+" ? "8+文字" : `${key}文字`),
     lengthCount: (n) => `${n}個`,
     scorePts: (n) => `${n}点`,
-    andMore: (n) => `他${n}個は省略`,
   },
   en: {
     hudScore: "SCORE", hudTime: "TIME", hudBest: "BEST",
@@ -189,6 +191,8 @@ const I18N = {
     highScoreEmpty: "No records yet",
     finalScoreLabel: "SCORE",
     restartBtn: "Play Again",
+    backToTitleBtn: "Back to Title",
+    quitBtn: "Quit",
     howToPlayHeading: "How to Play",
     howToPlaySteps: [
       "Drag across adjacent letters (including diagonals) to connect them into a word",
@@ -200,7 +204,6 @@ const I18N = {
     lengthUnit: (key) => (key === "8+" ? "8+ letters" : `${key} letters`),
     lengthCount: (n) => `${n}`,
     scorePts: (n) => `${n} pts`,
-    andMore: (n) => `+${n} more omitted`,
   },
 };
 
@@ -237,6 +240,8 @@ function applyLanguage() {
   highScoreNoteEl.textContent = t.highScoreNote;
   finalScoreLabelTextEl.textContent = t.finalScoreLabel;
   restartBtn.textContent = t.restartBtn;
+  backToTitleBtn.textContent = t.backToTitleBtn;
+  quitBtn.textContent = t.quitBtn;
   highScoreLabel60El.textContent = t.duration60;
   highScoreLabel120El.textContent = t.duration120;
   highScoreLabel180El.textContent = t.duration180;
@@ -567,9 +572,7 @@ function renderLengthCounts(targetEl, words) {
       summary.classList.add("length-summary");
       const detail = document.createElement("div");
       detail.className = "length-detail hidden";
-      const shown = list.slice(0, MAX_WORD_LIST_PREVIEW);
-      const omitted = list.length - shown.length;
-      detail.textContent = shown.join(", ") + (omitted > 0 ? ` …${t.andMore(omitted)}` : "");
+      detail.textContent = list.join(", ");
       li.appendChild(detail);
       summary.addEventListener("click", () => detail.classList.toggle("hidden"));
     }
@@ -882,6 +885,12 @@ async function init() {
   });
   startBtn.addEventListener("click", startGame);
   restartBtn.addEventListener("click", startGame);
+  backToTitleBtn.addEventListener("click", () => {
+    gameoverOverlay.classList.add("hidden");
+  });
+  quitBtn.addEventListener("click", () => {
+    window.close();
+  });
   retireBtn.addEventListener("click", () => {
     if (gameActive) endGame();
   });
