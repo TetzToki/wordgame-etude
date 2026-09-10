@@ -380,8 +380,14 @@ body.playing #quit-btn {
   font-size: 16px;
 }
 
-#retire-btn {
-  align-self: center;
+#in-game-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+#retire-btn,
+#shuffle-btn {
   background: transparent;
   border: 1px solid var(--muted);
   color: var(--muted);

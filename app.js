@@ -94,6 +94,7 @@ const missedListEl = document.getElementById("missed-list");
 const lengthBreakdownEl = document.getElementById("length-breakdown");
 const playerNameInput = document.getElementById("player-name");
 const retireBtn = document.getElementById("retire-btn");
+const shuffleBtn = document.getElementById("shuffle-btn");
 const highScoreList60El = document.getElementById("high-score-list-60");
 const highScoreList120El = document.getElementById("high-score-list-120");
 const highScoreList180El = document.getElementById("high-score-list-180");
@@ -145,6 +146,7 @@ const I18N = {
     skinDefault: "デフォルト", skinLight: "ライト", skinMetal: "メタリック", skinWood: "ウッド",
     startBtn: "スタート",
     retireBtn: "リタイヤ",
+    shuffleBtn: "シャッフル",
     loadingText: "辞書を読み込み中...",
     loadingError: "辞書の読み込みに失敗しました。オンライン状態を確認してタップして再試行してください。",
     gameoverHeading: "ゲーム終了！",
@@ -164,6 +166,7 @@ const I18N = {
       "指を離すと単語が確定",
       "制限時間内にできるだけ多くの単語を見つけよう",
       "得点 = タイル点数の合計 ＋ 文字数ボーナス（3文字:+0 / 4文字以上:+(文字数-3)）",
+      "ゲームに詰まったらシャッフルボタンを押そう。",
     ],
     lengthUnit: (key) => (key === "8+" ? "8+文字" : `${key}文字`),
     lengthCount: (n) => `${n}個`,
@@ -181,6 +184,7 @@ const I18N = {
     skinDefault: "Default", skinLight: "Light", skinMetal: "Metallic", skinWood: "Wood",
     startBtn: "Start",
     retireBtn: "Give Up",
+    shuffleBtn: "Shuffle",
     loadingText: "Loading dictionary...",
     loadingError: "Failed to load the dictionary. Check your connection and tap to retry.",
     gameoverHeading: "Game Over!",
@@ -200,6 +204,7 @@ const I18N = {
       "Release your finger to submit the word",
       "Find as many words as you can before time runs out",
       "Score = sum of tile points + length bonus (3 letters: +0 / 4+ letters: +(length-3))",
+      "Stuck? Press the shuffle button to get a new board.",
     ],
     lengthUnit: (key) => (key === "8+" ? "8+ letters" : `${key} letters`),
     lengthCount: (n) => `${n}`,
@@ -232,6 +237,7 @@ function applyLanguage() {
   skinLabelWoodEl.textContent = t.skinWood;
   startBtn.textContent = t.startBtn;
   retireBtn.textContent = t.retireBtn;
+  shuffleBtn.textContent = t.shuffleBtn;
   loadingText.textContent = t.loadingText;
   gameoverHeadingEl.textContent = t.gameoverHeading;
   foundSummaryPrefixEl.textContent = t.foundSummaryPrefix;
@@ -353,6 +359,18 @@ function renderBoard() {
     cell.innerHTML = `<span class="letter">${tile.display}</span><span class="points">${tilePoints(tile)}</span>`;
     boardEl.appendChild(cell);
   });
+}
+
+// Refreshes the tiles mid-game (score/found-words/timer are kept as-is).
+function shuffleBoard() {
+  if (!gameActive) return;
+  board = generateBoard();
+  neighbors = computeNeighbors();
+  path = [];
+  selecting = false;
+  currentWordEl.textContent = "";
+  updateSelectionUI();
+  renderBoard();
 }
 
 // ---- Selection interaction ----
@@ -760,6 +778,7 @@ function startGame() {
   gameoverOverlay.classList.add("hidden");
   startBtn.classList.add("hidden");
   retireBtn.classList.remove("hidden");
+  shuffleBtn.classList.remove("hidden");
   document.getElementById("duration-select").classList.add("hidden");
   document.getElementById("player-name-select").classList.add("hidden");
   skinSelectEl.classList.add("hidden");
@@ -787,6 +806,7 @@ function endGame() {
   gameoverOverlay.classList.remove("hidden");
   startBtn.classList.remove("hidden");
   retireBtn.classList.add("hidden");
+  shuffleBtn.classList.add("hidden");
   document.getElementById("duration-select").classList.remove("hidden");
   document.getElementById("player-name-select").classList.remove("hidden");
   skinSelectEl.classList.remove("hidden");
@@ -894,6 +914,7 @@ async function init() {
   retireBtn.addEventListener("click", () => {
     if (gameActive) endGame();
   });
+  shuffleBtn.addEventListener("click", shuffleBoard);
   document.querySelectorAll('input[name="duration"]').forEach((radio) => {
     radio.addEventListener("change", () => {
       if (!gameActive) timerEl.textContent = formatTime(getSelectedDuration());
